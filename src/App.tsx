@@ -1,0 +1,562 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import React, { useState } from 'react';
+import { GoogleGenAI } from "@google/genai";
+import { 
+  Layout, 
+  Newspaper, 
+  Instagram, 
+  Image as ImageIcon, 
+  Loader2, 
+  Sparkles,
+  ArrowRight,
+  Maximize2,
+  Facebook,
+  Twitter,
+  Linkedin,
+  X
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+
+// Initialize Gemini
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+
+type Medium = 'billboard' | 'newspaper' | 'social';
+type VisualStyle = 'minimalist' | 'cyberpunk' | 'vintage' | 'luxury' | 'brutalist';
+
+interface BrandGuidelines {
+  colors: string[];
+  fonts: string;
+  tone: string;
+}
+
+interface GeneratedImage {
+  url: string;
+  medium: Medium;
+  prompt: string;
+  copy: string;
+}
+
+export default function App() {
+  const [description, setDescription] = useState('');
+  const [selectedStyle, setSelectedStyle] = useState<VisualStyle>('minimalist');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [results, setResults] = useState<GeneratedImage[]>([]);
+  const [guidelines, setGuidelines] = useState<BrandGuidelines>({
+    colors: ['#1A1A1A', '#5A5A40', '#F5F5F0'],
+    fonts: 'Inter & Cormorant Garamond',
+    tone: 'Sophisticated and minimalist.'
+  });
+  const [isGuidelinesOpen, setIsGuidelinesOpen] = useState(true);
+  const [referenceImage, setReferenceImage] = useState<string | null>(null);
+  const [zoomedImage, setZoomedImage] = useState<GeneratedImage | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const styles: { id: VisualStyle; label: string; icon: React.ReactNode }[] = [
+    { id: 'minimalist', label: 'Minimalist', icon: <div className="w-3 h-3 border border-current rounded-sm" /> },
+    { id: 'luxury', label: 'Luxury', icon: <div className="w-3 h-3 bg-current rounded-full" /> },
+    { id: 'vintage', label: 'Vintage', icon: <div className="w-3 h-3 border-b-2 border-current" /> },
+    { id: 'cyberpunk', label: 'Cyberpunk', icon: <div className="w-3 h-3 bg-current rotate-45" /> },
+    { id: 'brutalist', label: 'Brutalist', icon: <div className="w-3 h-3 border-2 border-current" /> },
+  ];
+
+  const updateGuideline = (key: keyof BrandGuidelines, value: any) => {
+    setGuidelines(prev => ({ ...prev, [key]: value }));
+  };
+
+  const updateColor = (index: number, color: string) => {
+    const newColors = [...guidelines.colors];
+    newColors[index] = color;
+    updateGuideline('colors', newColors);
+  };
+
+  const generateBrand = async () => {
+    if (!description.trim()) return;
+    
+    setIsGenerating(true);
+    setError(null);
+    setResults([]);
+    setReferenceImage(null);
+
+    try {
+      // Step 1: Generate Brand Guidelines and Copy using Gemini Text
+      const textResponse = await ai.models.generateContent({
+        model: 'gemini-3-flash-preview',
+        contents: `Based on this product description: "${description}" and the visual style: "${selectedStyle}", generate:
+        1. Brand Guidelines: 3 hex colors, recommended font pairing, and 1 sentence tone of voice.
+        2. Ad Copy for 3 mediums: 
+           - Billboard: A short, punchy headline (max 5 words).
+           - Newspaper: A formal, persuasive body paragraph (2-3 sentences).
+           - Social: A trendy, engaging caption with 2 hashtags.
+        Return as JSON.`,
+        config: {
+          responseMimeType: 'application/json',
+          responseSchema: {
+            type: 'object',
+            properties: {
+              guidelines: {
+                type: 'object',
+                properties: {
+                  colors: { type: 'array', items: { type: 'string' } },
+                  fonts: { type: 'string' },
+                  tone: { type: 'string' }
+                },
+                required: ['colors', 'fonts', 'tone']
+              },
+              copy: {
+                type: 'object',
+                properties: {
+                  billboard: { type: 'string' },
+                  newspaper: { type: 'string' },
+                  social: { type: 'string' }
+                },
+                required: ['billboard', 'newspaper', 'social']
+              }
+            },
+            required: ['guidelines', 'copy']
+          }
+        }
+      });
+
+      const data = JSON.parse(textResponse.text || '{}');
+      setGuidelines(data.guidelines);
+      setIsGuidelinesOpen(true);
+
+      // Step 2: Generate a reference product image for consistency
+      const refResponse = await ai.models.generateContent({
+        model: 'gemini-2.5-flash-image',
+        contents: {
+          parts: [{ text: `A professional, high-quality studio product shot of ${description}. Style: ${selectedStyle}. Colors: ${data.guidelines.colors.join(', ')}. Plain white background, soft lighting, no people, centered, sharp focus.` }]
+        },
+        config: {
+          imageConfig: { aspectRatio: "1:1" }
+        }
+      });
+
+      let refImgBase64 = '';
+      for (const part of refResponse.candidates?.[0]?.content?.parts || []) {
+        if (part.inlineData) {
+          refImgBase64 = part.inlineData.data;
+          break;
+        }
+      }
+
+      if (!refImgBase64) throw new Error("Failed to generate reference image");
+      
+      const refUrl = `data:image/png;base64,${refImgBase64}`;
+      setReferenceImage(refUrl);
+
+      // Step 3: Generate across mediums
+      const mediums: Medium[] = ['billboard', 'newspaper', 'social'];
+      const generatedResults: GeneratedImage[] = [];
+
+      for (const medium of mediums) {
+        let mediumPrompt = '';
+        let aspectRatio: "1:1" | "16:9" | "9:16" | "3:4" | "4:3" = "1:1";
+
+        switch (medium) {
+          case 'billboard':
+            mediumPrompt = `A massive outdoor city billboard featuring this product. Style: ${selectedStyle}. Colors: ${data.guidelines.colors.join(', ')}. Urban environment, daytime, professional advertising photography, no people. Maintain the exact look of the product from the reference image.`;
+            aspectRatio = "16:9";
+            break;
+          case 'newspaper':
+            mediumPrompt = `A classic black and white newspaper advertisement. Style: ${selectedStyle}. The product is the centerpiece. Clear, elegant layout with sophisticated typography and borders. Visible vintage newsprint grain and halftone texture. High contrast, no people. Maintain the exact product design from the reference image.`;
+            aspectRatio = "3:4";
+            break;
+          case 'social':
+            mediumPrompt = `A high-end lifestyle product shot for social media. Style: ${selectedStyle}. Colors: ${data.guidelines.colors.join(', ')}. Minimalist aesthetic background, trendy lighting, professional marketing style, no people. Maintain the exact look of the product from the reference image.`;
+            aspectRatio = "1:1";
+            break;
+        }
+
+        const response = await ai.models.generateContent({
+          model: 'gemini-2.5-flash-image',
+          contents: {
+            parts: [
+              {
+                inlineData: {
+                  data: refImgBase64,
+                  mimeType: "image/png"
+                }
+              },
+              { text: mediumPrompt }
+            ]
+          },
+          config: {
+            imageConfig: { aspectRatio }
+          }
+        });
+
+        for (const part of response.candidates?.[0]?.content?.parts || []) {
+          if (part.inlineData) {
+            generatedResults.push({
+              url: `data:image/png;base64,${part.inlineData.data}`,
+              medium,
+              prompt: mediumPrompt,
+              copy: data.copy[medium]
+            });
+            break;
+          }
+        }
+      }
+
+      setResults(generatedResults);
+    } catch (err) {
+      console.error(err);
+      setError("Something went wrong during generation. Please try again.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#F5F5F0] text-[#1A1A1A] font-sans selection:bg-[#5A5A40] selection:text-white">
+      {/* Header */}
+      <header className="border-b border-[#1A1A1A]/10 py-6 px-8 flex justify-between items-center bg-white/50 backdrop-blur-md sticky top-0 z-50">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-[#1A1A1A] rounded-full flex items-center justify-center">
+            <Sparkles className="text-white w-4 h-4" />
+          </div>
+          <h1 className="text-xl font-medium tracking-tight">Brand Builder</h1>
+        </div>
+        <div className="text-xs uppercase tracking-widest opacity-50 font-semibold">
+          AI-Powered Vision
+        </div>
+      </header>
+
+      <main className="max-w-6xl mx-auto px-8 py-12">
+        {/* Input Section */}
+        <section className="mb-12">
+          <div className="max-w-3xl">
+            <h2 className="text-4xl font-light mb-8 leading-tight">
+              Describe your product, <br />
+              <span className="italic serif text-[#5A5A40]">visualize its future.</span>
+            </h2>
+            
+            {/* Style Toggles */}
+            <div className="flex flex-wrap gap-3 mb-8">
+              {styles.map((style) => (
+                <button
+                  key={style.id}
+                  onClick={() => setSelectedStyle(style.id)}
+                  className={`px-4 py-2 rounded-full text-xs font-semibold tracking-wider uppercase flex items-center gap-2 transition-all ${
+                    selectedStyle === style.id 
+                      ? 'bg-[#1A1A1A] text-white shadow-lg scale-105' 
+                      : 'bg-white border border-[#1A1A1A]/10 text-[#1A1A1A]/60 hover:border-[#1A1A1A]/30'
+                  }`}
+                >
+                  {style.icon}
+                  {style.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="relative group">
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="e.g., A sleek, minimalist obsidian water bottle with a matte finish and a copper cap..."
+                className="w-full bg-white border border-[#1A1A1A]/10 rounded-2xl p-6 text-lg focus:outline-none focus:ring-2 focus:ring-[#5A5A40]/20 transition-all min-h-[120px] shadow-sm group-hover:shadow-md"
+              />
+              <button
+                onClick={generateBrand}
+                disabled={isGenerating || !description.trim()}
+                className="absolute bottom-4 right-4 bg-[#1A1A1A] text-white px-6 py-3 rounded-full flex items-center gap-2 hover:bg-[#5A5A40] disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95"
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    Generate Brand
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* Brand Guidelines Section (Editable & Collapsible) */}
+        <section className="mb-16">
+          <div className="bg-white rounded-[2.5rem] border border-[#1A1A1A]/5 shadow-sm overflow-hidden">
+            <button 
+              onClick={() => setIsGuidelinesOpen(!isGuidelinesOpen)}
+              className="w-full p-8 flex items-center justify-between hover:bg-[#F5F5F0]/30 transition-colors"
+            >
+              <div className="flex items-center gap-3 opacity-40 uppercase tracking-[0.2em] text-[10px] font-bold">
+                <div className="w-4 h-[1px] bg-current" />
+                Brand Identity Guidelines
+              </div>
+              <motion.div
+                animate={{ rotate: isGuidelinesOpen ? 180 : 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <ArrowRight className="w-4 h-4 rotate-90 opacity-30" />
+              </motion.div>
+            </button>
+
+            <AnimatePresence initial={false}>
+              {isGuidelinesOpen && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
+                >
+                  <div className="px-8 pb-12 grid grid-cols-1 md:grid-cols-3 gap-12 border-t border-[#1A1A1A]/5 pt-8">
+                    {/* Colors */}
+                    <div>
+                      <h4 className="text-[10px] font-bold uppercase tracking-widest mb-4 opacity-50">Color Palette</h4>
+                      <div className="flex gap-4">
+                        {guidelines.colors.map((color, idx) => (
+                          <div key={`color-input-${idx}`} className="flex flex-col gap-2">
+                            <div 
+                              className="w-12 h-12 rounded-2xl border border-[#1A1A1A]/5 shadow-inner relative overflow-hidden" 
+                              style={{ backgroundColor: color }}
+                            >
+                              <input 
+                                type="color" 
+                                value={color}
+                                onChange={(e) => updateColor(idx, e.target.value)}
+                                className="absolute inset-0 opacity-0 cursor-pointer scale-150"
+                              />
+                            </div>
+                            <input 
+                              type="text"
+                              value={color}
+                              onChange={(e) => updateColor(idx, e.target.value)}
+                              className="text-[9px] font-mono w-12 bg-transparent border-none focus:outline-none opacity-40 hover:opacity-100 transition-opacity text-center"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Fonts */}
+                    <div>
+                      <h4 className="text-[10px] font-bold uppercase tracking-widest mb-4 opacity-50">Typography</h4>
+                      <input 
+                        type="text"
+                        value={guidelines.fonts}
+                        onChange={(e) => updateGuideline('fonts', e.target.value)}
+                        placeholder="e.g., Inter & Cormorant Garamond"
+                        className="w-full bg-transparent border-b border-[#1A1A1A]/10 py-1 text-lg serif italic text-[#5A5A40] focus:outline-none focus:border-[#5A5A40] transition-colors"
+                      />
+                    </div>
+
+                    {/* Tone */}
+                    <div>
+                      <h4 className="text-[10px] font-bold uppercase tracking-widest mb-4 opacity-50">Tone of Voice</h4>
+                      <textarea 
+                        value={guidelines.tone}
+                        onChange={(e) => updateGuideline('tone', e.target.value)}
+                        placeholder="e.g., Sophisticated and minimalist."
+                        className="w-full bg-transparent border-b border-[#1A1A1A]/10 py-1 text-sm leading-relaxed opacity-70 focus:outline-none focus:border-[#5A5A40] transition-colors resize-none h-20"
+                      />
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </section>
+
+        {/* Error State */}
+        {error && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8 p-4 bg-red-50 border border-red-100 text-red-600 rounded-xl text-sm"
+          >
+            {error}
+          </motion.div>
+        )}
+
+        {/* Results Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <AnimatePresence mode="popLayout">
+            {isGenerating && !results.length && (
+              [1, 2, 3].map((i) => (
+                <motion.div
+                  key={`skeleton-${i}`}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="aspect-square bg-white border border-[#1A1A1A]/5 rounded-3xl flex flex-col items-center justify-center gap-4 animate-pulse"
+                >
+                  <div className="w-12 h-12 bg-[#1A1A1A]/5 rounded-full" />
+                  <div className="h-4 w-32 bg-[#1A1A1A]/5 rounded-full" />
+                </motion.div>
+              ))
+            )}
+
+            {results.map((result, idx) => (
+              <motion.div
+                key={result.medium}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: idx * 0.1 }}
+                className="group relative"
+              >
+                <div className="bg-white rounded-[2rem] overflow-hidden shadow-sm border border-[#1A1A1A]/5 transition-all hover:shadow-xl hover:-translate-y-1">
+                  <div 
+                    className={`aspect-square relative overflow-hidden bg-[#F0F0F0] cursor-zoom-in group/image ${result.medium === 'newspaper' ? 'grayscale contrast-125 brightness-95' : ''}`}
+                    onClick={() => setZoomedImage(result)}
+                  >
+                    <img
+                      src={result.url}
+                      alt={result.medium}
+                      className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 ${result.medium === 'newspaper' ? 'mix-blend-multiply opacity-90' : ''}`}
+                      referrerPolicy="no-referrer"
+                    />
+                    <div className="absolute inset-0 bg-black/0 group-hover/image:bg-black/10 transition-colors flex items-center justify-center">
+                      <Maximize2 className="text-white opacity-0 group-hover/image:opacity-100 transition-opacity w-8 h-8" />
+                    </div>
+                    {result.medium === 'newspaper' && (
+                      <div className="absolute inset-0 pointer-events-none opacity-20 mix-blend-overlay bg-[url('https://www.transparenttextures.com/patterns/paper-fibers.png')]" />
+                    )}
+                    <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 shadow-sm">
+                      {result.medium === 'billboard' && <Layout className="w-3 h-3" />}
+                      {result.medium === 'newspaper' && <Newspaper className="w-3 h-3" />}
+                      {result.medium === 'social' && <Instagram className="w-3 h-3" />}
+                      {result.medium}
+                    </div>
+                  </div>
+                  <div className="p-8">
+                    <div className="mb-6">
+                      <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] mb-4 opacity-30 flex items-center gap-2">
+                        <div className="w-3 h-[1px] bg-current" />
+                        Ad Copy Draft
+                      </h3>
+                      <p className={`text-lg leading-snug ${result.medium === 'billboard' ? 'font-bold tracking-tight' : result.medium === 'newspaper' ? 'serif italic' : 'text-sm opacity-80'}`}>
+                        "{result.copy}"
+                      </p>
+                    </div>
+                    
+                    {result.medium === 'social' && (
+                      <div className="flex gap-4 pt-6 border-t border-[#1A1A1A]/5">
+                        <Facebook className="w-4 h-4 text-[#1A1A1A]/20" />
+                        <Twitter className="w-4 h-4 text-[#1A1A1A]/20" />
+                        <Linkedin className="w-4 h-4 text-[#1A1A1A]/20" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+
+        {/* Reference Image Sidebar/Footer */}
+        {referenceImage && (
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="fixed bottom-8 right-8 w-48 bg-white p-4 rounded-3xl shadow-2xl border border-[#1A1A1A]/10 z-40 cursor-zoom-in group"
+            onClick={() => setZoomedImage({ url: referenceImage, medium: 'social', prompt: 'Reference Shot', copy: '' })}
+          >
+            <div className="text-[10px] font-bold uppercase tracking-widest mb-3 opacity-40 flex items-center justify-center gap-2">
+              <ImageIcon className="w-3 h-3" />
+              Reference Shot
+            </div>
+            <div className="aspect-square rounded-xl overflow-hidden bg-[#F0F0F0] border border-[#1A1A1A]/5 relative">
+              <img 
+                src={referenceImage} 
+                alt="Reference" 
+                className="w-full h-full object-cover transition-transform group-hover:scale-110"
+                referrerPolicy="no-referrer"
+              />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                <Maximize2 className="text-white opacity-0 group-hover:opacity-100 transition-opacity w-4 h-4" />
+              </div>
+            </div>
+            <p className="text-[10px] mt-3 leading-tight opacity-50 text-center">
+              Click to enlarge reference
+            </p>
+          </motion.div>
+        )}
+
+        {/* Zoom Modal */}
+        <AnimatePresence>
+          {zoomedImage && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-12 bg-[#F5F5F0]/95 backdrop-blur-xl"
+              onClick={() => setZoomedImage(null)}
+            >
+              <button 
+                className="absolute top-8 right-8 p-3 bg-[#1A1A1A] text-white rounded-full hover:bg-[#5A5A40] transition-colors z-[110]"
+                onClick={() => setZoomedImage(null)}
+              >
+                <X className="w-6 h-6" />
+              </button>
+              
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="relative max-w-5xl w-full bg-white rounded-[3rem] shadow-2xl overflow-hidden flex flex-col md:flex-row"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className={`flex-1 bg-[#F0F0F0] relative ${zoomedImage.medium === 'newspaper' ? 'grayscale contrast-125 brightness-95' : ''}`}>
+                  <img 
+                    src={zoomedImage.url} 
+                    alt="Zoomed" 
+                    className={`w-full h-full object-contain ${zoomedImage.medium === 'newspaper' ? 'mix-blend-multiply opacity-90' : ''}`}
+                    referrerPolicy="no-referrer"
+                  />
+                  {zoomedImage.medium === 'newspaper' && (
+                    <div className="absolute inset-0 pointer-events-none opacity-20 mix-blend-overlay bg-[url('https://www.transparenttextures.com/patterns/paper-fibers.png')]" />
+                  )}
+                </div>
+                
+                <div className="w-full md:w-80 p-8 md:p-12 flex flex-col justify-center bg-white">
+                  <div className="mb-8">
+                    <div className="text-[10px] font-bold uppercase tracking-[0.2em] mb-4 opacity-30 flex items-center gap-2">
+                      <div className="w-4 h-[1px] bg-current" />
+                      Medium
+                    </div>
+                    <h3 className="text-2xl font-light capitalize">{zoomedImage.medium}</h3>
+                  </div>
+
+                  {zoomedImage.copy && (
+                    <div className="mb-8">
+                      <div className="text-[10px] font-bold uppercase tracking-[0.2em] mb-4 opacity-30 flex items-center gap-2">
+                        <div className="w-4 h-[1px] bg-current" />
+                        Ad Copy
+                      </div>
+                      <p className="text-lg serif italic leading-relaxed opacity-80">
+                        "{zoomedImage.copy}"
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="mt-auto pt-8 border-t border-[#1A1A1A]/5">
+                    <p className="text-[10px] uppercase tracking-widest opacity-30 font-bold">
+                      Brand Builder Concept
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </main>
+
+      {/* Footer Decoration */}
+      <footer className="mt-24 py-12 border-t border-[#1A1A1A]/10 px-8 text-center">
+        <p className="text-xs uppercase tracking-[0.2em] opacity-30">
+          Built with Gemini Nano-Banana &bull; No People Policy Enforced
+        </p>
+      </footer>
+    </div>
+  );
+}
