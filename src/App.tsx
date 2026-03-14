@@ -17,7 +17,8 @@ import {
   Facebook,
   Twitter,
   Linkedin,
-  X
+  X,
+  Filter
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -26,6 +27,7 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
 
 type Medium = 'billboard' | 'newspaper' | 'social';
 type VisualStyle = 'minimalist' | 'cyberpunk' | 'vintage' | 'luxury' | 'brutalist';
+type FilterType = 'none' | 'grayscale' | 'sepia' | 'warm' | 'cool' | 'vignette';
 
 interface BrandGuidelines {
   colors: string[];
@@ -43,14 +45,17 @@ interface GeneratedImage {
 export default function App() {
   const [description, setDescription] = useState('');
   const [selectedStyle, setSelectedStyle] = useState<VisualStyle>('minimalist');
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [isGeneratingRef, setIsGeneratingRef] = useState(false);
+  const [isGeneratingCampaign, setIsGeneratingCampaign] = useState(false);
   const [results, setResults] = useState<GeneratedImage[]>([]);
   const [guidelines, setGuidelines] = useState<BrandGuidelines>({
     colors: ['#1A1A1A', '#5A5A40', '#F5F5F0'],
     fonts: 'Inter & Cormorant Garamond',
     tone: 'Sophisticated and minimalist.'
   });
+  const [draftedCopy, setDraftedCopy] = useState<{ [key in Medium]: string } | null>(null);
   const [isGuidelinesOpen, setIsGuidelinesOpen] = useState(true);
+  const [activeFilter, setActiveFilter] = useState<FilterType>('none');
   const [referenceImage, setReferenceImage] = useState<string | null>(null);
   const [zoomedImage, setZoomedImage] = useState<GeneratedImage | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -73,12 +78,30 @@ export default function App() {
     updateGuideline('colors', newColors);
   };
 
-  const generateBrand = async () => {
+  const filters: { id: FilterType; label: string }[] = [
+    { id: 'none', label: 'Original' },
+    { id: 'grayscale', label: 'B&W' },
+    { id: 'sepia', label: 'Sepia' },
+    { id: 'warm', label: 'Warm' },
+    { id: 'cool', label: 'Cool' },
+    { id: 'vignette', label: 'Vignette' },
+  ];
+
+  const getFilterStyle = (filter: FilterType) => {
+    switch (filter) {
+      case 'grayscale': return 'grayscale(100%)';
+      case 'sepia': return 'sepia(100%)';
+      case 'warm': return 'sepia(30%) saturate(140%) brightness(105%)';
+      case 'cool': return 'hue-rotate(180deg) saturate(80%) brightness(105%)';
+      default: return 'none';
+    }
+  };
+
+  const generateReference = async () => {
     if (!description.trim()) return;
     
-    setIsGenerating(true);
+    setIsGeneratingRef(true);
     setError(null);
-    setResults([]);
     setReferenceImage(null);
 
     try {
@@ -148,8 +171,28 @@ export default function App() {
       
       const refUrl = `data:image/png;base64,${refImgBase64}`;
       setReferenceImage(refUrl);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to generate reference concept. Please try again.");
+    } finally {
+      setIsGeneratingRef(false);
+    }
+  };
 
-      // Step 3: Generate across mediums
+  const generateCampaign = async () => {
+    if (!description.trim() || !referenceImage) return;
+    
+    setIsGeneratingCampaign(true);
+    setError(null);
+    setResults([]);
+
+    try {
+      // We need the guidelines/copy data again or we should store the copy in state
+      // For simplicity, we'll re-generate or assume it's in the guidelines/copy state if we added it
+      // Let's add a copy state to store the drafted copy
+      
+      const refImgBase64 = referenceImage.split(',')[1];
+
       const mediums: Medium[] = ['billboard', 'newspaper', 'social'];
       const generatedResults: GeneratedImage[] = [];
 
@@ -159,7 +202,7 @@ export default function App() {
 
         switch (medium) {
           case 'billboard':
-            mediumPrompt = `A massive outdoor city billboard featuring this product. Style: ${selectedStyle}. Colors: ${data.guidelines.colors.join(', ')}. Urban environment, daytime, professional advertising photography, no people. Maintain the exact look of the product from the reference image.`;
+            mediumPrompt = `A massive outdoor city billboard featuring this product. Style: ${selectedStyle}. Colors: ${guidelines.colors.join(', ')}. Urban environment, daytime, professional advertising photography, no people. Maintain the exact look of the product from the reference image.`;
             aspectRatio = "16:9";
             break;
           case 'newspaper':
@@ -167,7 +210,7 @@ export default function App() {
             aspectRatio = "3:4";
             break;
           case 'social':
-            mediumPrompt = `A high-end lifestyle product shot for social media. Style: ${selectedStyle}. Colors: ${data.guidelines.colors.join(', ')}. Minimalist aesthetic background, trendy lighting, professional marketing style, no people. Maintain the exact look of the product from the reference image.`;
+            mediumPrompt = `A high-end lifestyle product shot for social media. Style: ${selectedStyle}. Colors: ${guidelines.colors.join(', ')}. Minimalist aesthetic background, trendy lighting, professional marketing style, no people. Maintain the exact look of the product from the reference image.`;
             aspectRatio = "1:1";
             break;
         }
@@ -196,7 +239,7 @@ export default function App() {
               url: `data:image/png;base64,${part.inlineData.data}`,
               medium,
               prompt: mediumPrompt,
-              copy: data.copy[medium]
+              copy: draftedCopy ? draftedCopy[medium] : ''
             });
             break;
           }
@@ -206,9 +249,9 @@ export default function App() {
       setResults(generatedResults);
     } catch (err) {
       console.error(err);
-      setError("Something went wrong during generation. Please try again.");
+      setError("Failed to generate campaign. Please try again.");
     } finally {
-      setIsGenerating(false);
+      setIsGeneratingCampaign(false);
     }
   };
 
@@ -237,7 +280,7 @@ export default function App() {
             </h2>
             
             {/* Style Toggles */}
-            <div className="flex flex-wrap gap-3 mb-8">
+            <div className="flex flex-wrap gap-3 mb-4">
               {styles.map((style) => (
                 <button
                   key={style.id}
@@ -254,6 +297,27 @@ export default function App() {
               ))}
             </div>
 
+            {/* Filter Toggles */}
+            <div className="flex flex-wrap gap-2 mb-8">
+              <div className="flex items-center gap-2 mr-2 opacity-40">
+                <Filter className="w-3 h-3" />
+                <span className="text-[10px] uppercase font-bold tracking-widest">Filters</span>
+              </div>
+              {filters.map((filter) => (
+                <button
+                  key={filter.id}
+                  onClick={() => setActiveFilter(filter.id)}
+                  className={`px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-widest uppercase transition-all ${
+                    activeFilter === filter.id 
+                      ? 'bg-[#5A5A40] text-white' 
+                      : 'bg-white/50 text-[#1A1A1A]/40 hover:bg-white hover:text-[#1A1A1A]/60'
+                  }`}
+                >
+                  {filter.label}
+                </button>
+              ))}
+            </div>
+
             <div className="relative group">
               <textarea
                 value={description}
@@ -261,23 +325,42 @@ export default function App() {
                 placeholder="e.g., A sleek, minimalist obsidian water bottle with a matte finish and a copper cap..."
                 className="w-full bg-white border border-[#1A1A1A]/10 rounded-2xl p-6 text-lg focus:outline-none focus:ring-2 focus:ring-[#5A5A40]/20 transition-all min-h-[120px] shadow-sm group-hover:shadow-md"
               />
-              <button
-                onClick={generateBrand}
-                disabled={isGenerating || !description.trim()}
-                className="absolute bottom-4 right-4 bg-[#1A1A1A] text-white px-6 py-3 rounded-full flex items-center gap-2 hover:bg-[#5A5A40] disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95"
-              >
-                {isGenerating ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Generating...
-                  </>
-                ) : (
-                  <>
-                    Generate Brand
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
-              </button>
+              <div className="absolute bottom-4 right-4 flex gap-3">
+                <button
+                  onClick={generateReference}
+                  disabled={isGeneratingRef || isGeneratingCampaign || !description.trim()}
+                  className="bg-white border border-[#1A1A1A]/10 text-[#1A1A1A] px-6 py-3 rounded-full flex items-center gap-2 hover:bg-[#F5F5F0] disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95 shadow-sm"
+                >
+                  {isGeneratingRef ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Drafting...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4" />
+                      Generate Reference
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={generateCampaign}
+                  disabled={isGeneratingRef || isGeneratingCampaign || !description.trim() || !referenceImage}
+                  className="bg-[#1A1A1A] text-white px-6 py-3 rounded-full flex items-center gap-2 hover:bg-[#5A5A40] disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95 shadow-lg"
+                >
+                  {isGeneratingCampaign ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Launching...
+                    </>
+                  ) : (
+                    <>
+                      Generate Campaign
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </section>
@@ -381,7 +464,7 @@ export default function App() {
         {/* Results Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           <AnimatePresence mode="popLayout">
-            {isGenerating && !results.length && (
+            {isGeneratingCampaign && !results.length && (
               [1, 2, 3].map((i) => (
                 <motion.div
                   key={`skeleton-${i}`}
@@ -412,9 +495,13 @@ export default function App() {
                     <img
                       src={result.url}
                       alt={result.medium}
+                      style={{ filter: getFilterStyle(activeFilter) }}
                       className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 ${result.medium === 'newspaper' ? 'mix-blend-multiply opacity-90' : ''}`}
                       referrerPolicy="no-referrer"
                     />
+                    {activeFilter === 'vignette' && (
+                      <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_100px_rgba(0,0,0,0.5)]" />
+                    )}
                     <div className="absolute inset-0 bg-black/0 group-hover/image:bg-black/10 transition-colors flex items-center justify-center">
                       <Maximize2 className="text-white opacity-0 group-hover/image:opacity-100 transition-opacity w-8 h-8" />
                     </div>
@@ -454,30 +541,45 @@ export default function App() {
         </div>
 
         {/* Reference Image Sidebar/Footer */}
-        {referenceImage && (
+        {(referenceImage || isGeneratingRef) && (
           <motion.div 
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             className="fixed bottom-8 right-8 w-48 bg-white p-4 rounded-3xl shadow-2xl border border-[#1A1A1A]/10 z-40 cursor-zoom-in group"
-            onClick={() => setZoomedImage({ url: referenceImage, medium: 'social', prompt: 'Reference Shot', copy: '' })}
+            onClick={() => referenceImage && setZoomedImage({ url: referenceImage, medium: 'social', prompt: 'Reference Shot', copy: '' })}
           >
             <div className="text-[10px] font-bold uppercase tracking-widest mb-3 opacity-40 flex items-center justify-center gap-2">
               <ImageIcon className="w-3 h-3" />
               Reference Shot
             </div>
             <div className="aspect-square rounded-xl overflow-hidden bg-[#F0F0F0] border border-[#1A1A1A]/5 relative">
-              <img 
-                src={referenceImage} 
-                alt="Reference" 
-                className="w-full h-full object-cover transition-transform group-hover:scale-110"
-                referrerPolicy="no-referrer"
-              />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                <Maximize2 className="text-white opacity-0 group-hover:opacity-100 transition-opacity w-4 h-4" />
-              </div>
+              {isGeneratingRef ? (
+                <div className="w-full h-full flex items-center justify-center">
+                  <motion.div
+                    animate={{ opacity: [0.3, 0.6, 0.3] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                    className="w-full h-full bg-[#1A1A1A]/5"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-6 h-6 border-2 border-[#1A1A1A]/20 border-t-[#1A1A1A] rounded-full animate-spin" />
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <img 
+                    src={referenceImage!} 
+                    alt="Reference" 
+                    className="w-full h-full object-cover transition-transform group-hover:scale-110"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                    <Maximize2 className="text-white opacity-0 group-hover:opacity-100 transition-opacity w-4 h-4" />
+                  </div>
+                </>
+              )}
             </div>
             <p className="text-[10px] mt-3 leading-tight opacity-50 text-center">
-              Click to enlarge reference
+              {isGeneratingRef ? 'Generating reference...' : 'Click to enlarge reference'}
             </p>
           </motion.div>
         )}
@@ -510,9 +612,13 @@ export default function App() {
                   <img 
                     src={zoomedImage.url} 
                     alt="Zoomed" 
+                    style={{ filter: getFilterStyle(activeFilter) }}
                     className={`w-full h-full object-contain ${zoomedImage.medium === 'newspaper' ? 'mix-blend-multiply opacity-90' : ''}`}
                     referrerPolicy="no-referrer"
                   />
+                  {activeFilter === 'vignette' && (
+                    <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_150px_rgba(0,0,0,0.6)]" />
+                  )}
                   {zoomedImage.medium === 'newspaper' && (
                     <div className="absolute inset-0 pointer-events-none opacity-20 mix-blend-overlay bg-[url('https://www.transparenttextures.com/patterns/paper-fibers.png')]" />
                   )}
