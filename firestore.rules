@@ -1,0 +1,91 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: {userId}
+    // Fields:
+    //   - uid: string (required)
+    //   - email: string (required)
+    //   - displayName: string (optional)
+    //   - photoURL: string (optional)
+    //   - createdAt: timestamp (required)
+    //
+    // Collection: campaigns
+    // Document ID: {campaignId}
+    // Fields:
+    //   - userId: string (required)
+    //   - description: string (required)
+    //   - style: string (required)
+    //   - guidelines: map (required)
+    //   - referenceImage: string (optional)
+    //   - results: list (optional)
+    //   - createdAt: timestamp (required)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          (request.auth.token.email == "nareshaspire45@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasOnly(['uid', 'email', 'displayName', 'photoURL', 'createdAt']) &&
+             data.keys().hasAll(['uid', 'email', 'createdAt']) &&
+             data.uid is string && data.uid.size() < 128 &&
+             data.email is string && data.email.size() < 256 &&
+             (data.displayName == null || (data.displayName is string && data.displayName.size() < 256)) &&
+             (data.photoURL == null || (data.photoURL is string && data.photoURL.size() < 2048)) &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidCampaign(data) {
+      return data.keys().hasOnly(['userId', 'description', 'style', 'guidelines', 'referenceImage', 'results', 'createdAt']) &&
+             data.keys().hasAll(['userId', 'description', 'style', 'createdAt']) &&
+             data.userId is string && data.userId.size() < 128 &&
+             data.description is string && data.description.size() < 5000 &&
+             data.style is string && data.style.size() < 50 &&
+             data.createdAt is timestamp;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if isOwner(userId) && isValidUser(request.resource.data) && request.resource.data.uid == resource.data.uid;
+    }
+
+    match /campaigns/{campaignId} {
+      allow read: if isDocOwner() || isAdmin();
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid && isValidCampaign(request.resource.data);
+      allow update: if isDocOwner() && isValidCampaign(request.resource.data) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isDocOwner() || isAdmin();
+    }
+
+    match /test/connection {
+      allow read: if true;
+    }
+  }
+}

@@ -3,8 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
-import { GoogleGenAI } from "@google/genai";
+import * as React from 'react';
+import { useState, useEffect, useCallback, Component } from 'react';
+import { GoogleGenAI, ThinkingLevel } from "@google/genai";
 import { 
   Layout, 
   Newspaper, 
@@ -18,9 +19,33 @@ import {
   Twitter,
   Linkedin,
   X,
-  Filter
+  Filter,
+  Brain,
+  LogOut,
+  History,
+  User as UserIcon,
+  Trash2,
+  AlertCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { 
+  auth, 
+  db, 
+  googleProvider, 
+  signInWithPopup, 
+  signOut, 
+  onAuthStateChanged, 
+  setDoc, 
+  collection, 
+  addDoc, 
+  serverTimestamp, 
+  query, 
+  where, 
+  orderBy, 
+  onSnapshot,
+  User,
+  doc
+} from './firebase';
 
 // Initialize Gemini
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
@@ -42,7 +67,74 @@ interface GeneratedImage {
   copy: string;
 }
 
+interface CampaignRecord {
+  id: string;
+  userId: string;
+  description: string;
+  style: VisualStyle;
+  guidelines: BrandGuidelines;
+  referenceImage: string;
+  results: GeneratedImage[];
+  createdAt: any;
+}
+
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: any;
+}
+
+// Error Boundary Component
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  public state: ErrorBoundaryState = { hasError: false, error: null };
+
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+  }
+
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true, error };
+  }
+
+  render() {
+    const { hasError } = this.state;
+    if (hasError) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-[#F5F5F0] p-8">
+          <div className="max-w-md w-full bg-white p-8 rounded-[2.5rem] shadow-xl border border-red-100 text-center">
+            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-light mb-4">Something went wrong</h2>
+            <p className="text-sm opacity-60 mb-8 leading-relaxed">
+              We encountered an unexpected error. Please try refreshing the page.
+            </p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="w-full bg-[#1A1A1A] text-white py-4 rounded-full font-bold tracking-widest uppercase text-xs hover:bg-[#5A5A40] transition-colors"
+            >
+              Refresh App
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return (this as any).props.children;
+  }
+}
+
 export default function App() {
+  return (
+    <ErrorBoundary>
+      <BrandBuilderApp />
+    </ErrorBoundary>
+  );
+}
+
+function BrandBuilderApp() {
+  const [user, setUser] = useState<User | null>(null);
+  const [isAuthReady, setIsAuthReady] = useState(false);
   const [description, setDescription] = useState('');
   const [selectedStyle, setSelectedStyle] = useState<VisualStyle>('minimalist');
   const [isGeneratingRef, setIsGeneratingRef] = useState(false);
@@ -59,6 +151,96 @@ export default function App() {
   const [referenceImage, setReferenceImage] = useState<string | null>(null);
   const [zoomedImage, setZoomedImage] = useState<GeneratedImage | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isThinkingMode, setIsThinkingMode] = useState(false);
+  const [history, setHistory] = useState<CampaignRecord[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+
+  // Auth Listener
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setIsAuthReady(true);
+      if (currentUser) {
+        // Sync user to Firestore
+        setDoc(doc(db, 'users', currentUser.uid), {
+          uid: currentUser.uid,
+          email: currentUser.email,
+          displayName: currentUser.displayName,
+          photoURL: currentUser.photoURL,
+          createdAt: serverTimestamp()
+        }, { merge: true });
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // History Listener
+  useEffect(() => {
+    if (!user) {
+      setHistory([]);
+      return;
+    }
+
+    const q = query(
+      collection(db, 'campaigns'),
+      where('userId', '==', user.uid),
+      orderBy('createdAt', 'desc')
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const records: CampaignRecord[] = [];
+      snapshot.forEach((doc) => {
+        records.push({ id: doc.id, ...doc.data() } as CampaignRecord);
+      });
+      setHistory(records);
+    }, (err) => {
+      console.error("Firestore History Error:", err);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
+
+  const handleLogin = async () => {
+    try {
+      await signInWithPopup(auth, googleProvider);
+    } catch (err) {
+      console.error("Login Error:", err);
+      setError("Failed to sign in with Google.");
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      setResults([]);
+      setReferenceImage(null);
+      setDescription('');
+    } catch (err) {
+      console.error("Logout Error:", err);
+    }
+  };
+
+  const saveCampaign = async (campaignData: Omit<CampaignRecord, 'id' | 'createdAt'>) => {
+    if (!user) return;
+    try {
+      await addDoc(collection(db, 'campaigns'), {
+        ...campaignData,
+        userId: user.uid,
+        createdAt: serverTimestamp()
+      });
+    } catch (err) {
+      console.error("Save Campaign Error:", err);
+    }
+  };
+
+  const loadCampaign = (campaign: CampaignRecord) => {
+    setDescription(campaign.description);
+    setSelectedStyle(campaign.style);
+    setGuidelines(campaign.guidelines);
+    setReferenceImage(campaign.referenceImage);
+    setResults(campaign.results);
+    setShowHistory(false);
+  };
 
   const styles: { id: VisualStyle; label: string; icon: React.ReactNode }[] = [
     { id: 'minimalist', label: 'Minimalist', icon: <div className="w-3 h-3 border border-current rounded-sm" /> },
@@ -107,7 +289,7 @@ export default function App() {
     try {
       // Step 1: Generate Brand Guidelines and Copy using Gemini Text
       const textResponse = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model: isThinkingMode ? 'gemini-3.1-pro-preview' : 'gemini-3-flash-preview',
         contents: `Based on this product description: "${description}" and the visual style: "${selectedStyle}", generate:
         1. Brand Guidelines: 3 hex colors, recommended font pairing, and 1 sentence tone of voice.
         2. Ad Copy for 3 mediums: 
@@ -117,6 +299,7 @@ export default function App() {
         Return as JSON.`,
         config: {
           responseMimeType: 'application/json',
+          thinkingConfig: isThinkingMode ? { thinkingLevel: ThinkingLevel.HIGH } : undefined,
           responseSchema: {
             type: 'object',
             properties: {
@@ -247,6 +430,18 @@ export default function App() {
       }
 
       setResults(generatedResults);
+
+      // Save to Firestore
+      if (user) {
+        saveCampaign({
+          description,
+          style: selectedStyle,
+          guidelines,
+          referenceImage: referenceImage!,
+          results: generatedResults,
+          userId: user.uid
+        });
+      }
     } catch (err) {
       console.error(err);
       setError("Failed to generate campaign. Please try again.");
@@ -254,6 +449,43 @@ export default function App() {
       setIsGeneratingCampaign(false);
     }
   };
+
+  if (!isAuthReady) {
+    return (
+      <div className="min-h-screen bg-[#F5F5F0] flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin opacity-20" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-[#F5F5F0] text-[#1A1A1A] font-sans flex items-center justify-center p-8">
+        <div className="max-w-md w-full">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white p-12 rounded-[3rem] shadow-2xl border border-[#1A1A1A]/5 text-center"
+          >
+            <div className="w-16 h-16 bg-[#1A1A1A] rounded-full flex items-center justify-center mx-auto mb-8 shadow-xl">
+              <Sparkles className="text-white w-8 h-8" />
+            </div>
+            <h1 className="text-3xl font-light mb-4 tracking-tight">Brand Builder</h1>
+            <p className="text-sm opacity-50 mb-12 leading-relaxed">
+              Sign in to start visualizing your product's future with AI-powered vision.
+            </p>
+            <button 
+              onClick={handleLogin}
+              className="w-full bg-[#1A1A1A] text-white py-5 rounded-full font-bold tracking-widest uppercase text-xs hover:bg-[#5A5A40] transition-all active:scale-95 shadow-lg flex items-center justify-center gap-3"
+            >
+              <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" alt="Google" />
+              Sign in with Google
+            </button>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F5F5F0] text-[#1A1A1A] font-sans selection:bg-[#5A5A40] selection:text-white">
@@ -265,12 +497,98 @@ export default function App() {
           </div>
           <h1 className="text-xl font-medium tracking-tight">Brand Builder</h1>
         </div>
-        <div className="text-xs uppercase tracking-widest opacity-50 font-semibold">
-          AI-Powered Vision
+        
+        <div className="flex items-center gap-6">
+          <button 
+            onClick={() => setShowHistory(!showHistory)}
+            className="text-xs uppercase tracking-widest opacity-50 font-semibold hover:opacity-100 transition-opacity flex items-center gap-2"
+          >
+            <History className="w-4 h-4" />
+            History
+          </button>
+          <div className="h-4 w-[1px] bg-[#1A1A1A]/10" />
+          <div className="flex items-center gap-3">
+            <div className="text-right hidden sm:block">
+              <p className="text-[10px] font-bold uppercase tracking-widest">{user.displayName}</p>
+              <button 
+                onClick={handleLogout}
+                className="text-[9px] uppercase tracking-widest opacity-40 hover:opacity-100 transition-opacity flex items-center gap-1 ml-auto"
+              >
+                <LogOut className="w-3 h-3" />
+                Logout
+              </button>
+            </div>
+            {user.photoURL ? (
+              <img src={user.photoURL} alt="User" className="w-8 h-8 rounded-full border border-[#1A1A1A]/10" />
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-[#1A1A1A]/5 flex items-center justify-center">
+                <UserIcon className="w-4 h-4 opacity-30" />
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
       <main className="max-w-6xl mx-auto px-8 py-12">
+        {/* History Modal */}
+        <AnimatePresence>
+          {showHistory && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-12 bg-[#F5F5F0]/95 backdrop-blur-xl"
+              onClick={() => setShowHistory(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="relative max-w-4xl w-full bg-white rounded-[3rem] shadow-2xl overflow-hidden flex flex-col h-[80vh]"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="p-8 border-b border-[#1A1A1A]/5 flex justify-between items-center">
+                  <h3 className="text-2xl font-light">Campaign History</h3>
+                  <button onClick={() => setShowHistory(false)} className="p-2 hover:bg-[#F5F5F0] rounded-full transition-colors">
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+                <div className="flex-1 overflow-y-auto p-8">
+                  {history.length === 0 ? (
+                    <div className="h-full flex flex-col items-center justify-center opacity-20">
+                      <History className="w-12 h-12 mb-4" />
+                      <p className="uppercase tracking-widest text-xs font-bold">No campaigns yet</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      {history.map((record) => (
+                        <div 
+                          key={record.id}
+                          onClick={() => loadCampaign(record)}
+                          className="group bg-[#F5F5F0]/50 rounded-3xl p-6 border border-[#1A1A1A]/5 hover:bg-white hover:shadow-xl transition-all cursor-pointer"
+                        >
+                          <div className="aspect-video rounded-2xl overflow-hidden mb-4 bg-white">
+                            <img src={record.referenceImage} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Ref" />
+                          </div>
+                          <p className="text-xs font-bold uppercase tracking-widest opacity-30 mb-2">
+                            {record.createdAt?.toDate ? record.createdAt.toDate().toLocaleDateString() : 'Recent'}
+                          </p>
+                          <h4 className="text-lg font-light line-clamp-1 mb-2">{record.description}</h4>
+                          <div className="flex gap-2">
+                            <span className="text-[9px] uppercase tracking-widest font-bold px-2 py-1 bg-[#1A1A1A]/5 rounded-md opacity-50">
+                              {record.style}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Input Section */}
         <section className="mb-12">
           <div className="max-w-3xl">
@@ -316,6 +634,21 @@ export default function App() {
                   {filter.label}
                 </button>
               ))}
+            </div>
+            
+            <div className="flex items-center justify-between mb-2">
+              <button
+                onClick={() => setIsThinkingMode(!isThinkingMode)}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-widest uppercase transition-all ${
+                  isThinkingMode 
+                    ? 'bg-[#1A1A1A] text-white shadow-md' 
+                    : 'bg-white/50 text-[#1A1A1A]/40 hover:bg-white hover:text-[#1A1A1A]/60'
+                }`}
+                title="Enable deep reasoning for complex brand strategy"
+              >
+                <Brain className={`w-3 h-3 ${isThinkingMode ? 'animate-pulse' : ''}`} />
+                Thinking Mode
+              </button>
             </div>
 
             <div className="relative group">

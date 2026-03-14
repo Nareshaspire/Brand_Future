@@ -1,0 +1,60 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Stores user information and preferences.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Unique identifier from Firebase Auth" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email"]
+    },
+    "Campaign": {
+      "title": "Brand Campaign",
+      "description": "Stores generated brand concepts and ad assets.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "The UID of the owner" },
+        "description": { "type": "string" },
+        "style": { "type": "string" },
+        "guidelines": {
+          "type": "object",
+          "properties": {
+            "colors": { "type": "array", "items": { "type": "string" } },
+            "fonts": { "type": "string" },
+            "tone": { "type": "string" }
+          }
+        },
+        "referenceImage": { "type": "string" },
+        "results": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "url": { "type": "string" },
+              "medium": { "type": "string" },
+              "prompt": { "type": "string" },
+              "copy": { "type": "string" }
+            }
+          }
+        },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "description", "style", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile documents"
+    },
+    "/campaigns/{campaignId}": {
+      "schema": "Campaign",
+      "description": "Generated campaign documents"
+    }
+  }
+}
