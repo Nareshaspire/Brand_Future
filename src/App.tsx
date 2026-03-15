@@ -477,23 +477,23 @@ function BrandBuilderApp() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-[#F5F5F0] text-[#1A1A1A] font-sans flex items-center justify-center p-8">
+      <div className="min-h-screen bg-studio-bg text-studio-ink font-sans flex items-center justify-center p-8 studio-grid">
         <div className="max-w-md w-full">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white p-12 rounded-[3rem] shadow-2xl border border-[#1A1A1A]/5 text-center"
+            className="brand-card p-12 text-center"
           >
-            <div className="w-16 h-16 bg-[#1A1A1A] rounded-full flex items-center justify-center mx-auto mb-8 shadow-xl">
-              <Sparkles className="text-white w-8 h-8" />
+            <div className="w-20 h-20 bg-studio-ink rounded-full flex items-center justify-center mx-auto mb-8 shadow-2xl">
+              <Sparkles className="text-white w-10 h-10" />
             </div>
-            <h1 className="text-3xl font-light mb-4 tracking-tight">Brand Builder</h1>
-            <p className="text-sm opacity-50 mb-12 leading-relaxed">
-              Sign in to start visualizing your product's future with AI-powered vision.
+            <h1 className="text-4xl font-serif mb-4 italic">Brand Builder</h1>
+            <p className="text-sm opacity-50 mb-12 leading-relaxed font-light">
+              Visualize your brand's future with AI-powered creative direction.
             </p>
             <button 
               onClick={handleLogin}
-              className="w-full bg-[#1A1A1A] text-white py-5 rounded-full font-bold tracking-widest uppercase text-xs hover:bg-[#5A5A40] transition-all active:scale-95 shadow-lg flex items-center justify-center gap-3"
+              className="w-full btn-primary flex items-center justify-center gap-3"
             >
               <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" alt="Google" />
               Sign in with Google
@@ -505,48 +505,48 @@ function BrandBuilderApp() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F5F5F0] text-[#1A1A1A] font-sans selection:bg-[#5A5A40] selection:text-white">
+    <div className="min-h-screen bg-studio-bg text-studio-ink font-sans selection:bg-studio-ink selection:text-white studio-grid">
       {/* Header */}
-      <header className="border-b border-[#1A1A1A]/10 py-6 px-8 flex justify-between items-center bg-white/50 backdrop-blur-md sticky top-0 z-50">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-[#1A1A1A] rounded-full flex items-center justify-center">
-            <Sparkles className="text-white w-4 h-4" />
+      <header className="border-b border-studio-ink/5 py-8 px-12 flex justify-between items-center bg-white/50 backdrop-blur-md sticky top-0 z-50">
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 bg-studio-ink rounded-full flex items-center justify-center">
+            <Sparkles className="text-white w-5 h-5" />
           </div>
-          <h1 className="text-xl font-medium tracking-tight">Brand Builder</h1>
+          <h1 className="text-2xl font-serif italic tracking-tight">Brand Builder</h1>
         </div>
         
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-8">
           <button 
             onClick={() => setShowHistory(!showHistory)}
-            className="text-xs uppercase tracking-widest opacity-50 font-semibold hover:opacity-100 transition-opacity flex items-center gap-2"
+            className="text-[10px] uppercase tracking-[0.2em] opacity-40 font-bold hover:opacity-100 transition-opacity flex items-center gap-2"
           >
             <History className="w-4 h-4" />
-            History
+            Archives
           </button>
-          <div className="h-4 w-[1px] bg-[#1A1A1A]/10" />
-          <div className="flex items-center gap-3">
+          <div className="h-4 w-[1px] bg-studio-ink/10" />
+          <div className="flex items-center gap-4">
             <div className="text-right hidden sm:block">
-              <p className="text-[10px] font-bold uppercase tracking-widest">{user.displayName}</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em]">{user.displayName}</p>
               <button 
                 onClick={handleLogout}
-                className="text-[9px] uppercase tracking-widest opacity-40 hover:opacity-100 transition-opacity flex items-center gap-1 ml-auto"
+                className="text-[9px] uppercase tracking-[0.2em] opacity-30 hover:opacity-100 transition-opacity flex items-center gap-1 ml-auto"
               >
                 <LogOut className="w-3 h-3" />
                 Logout
               </button>
             </div>
             {user.photoURL ? (
-              <img src={user.photoURL} alt="User" className="w-8 h-8 rounded-full border border-[#1A1A1A]/10" />
+              <img src={user.photoURL} alt="User" className="w-10 h-10 rounded-full border border-studio-ink/10 grayscale hover:grayscale-0 transition-all" />
             ) : (
-              <div className="w-8 h-8 rounded-full bg-[#1A1A1A]/5 flex items-center justify-center">
-                <UserIcon className="w-4 h-4 opacity-30" />
+              <div className="w-10 h-10 rounded-full bg-studio-ink/5 flex items-center justify-center">
+                <UserIcon className="w-5 h-5 opacity-30" />
               </div>
             )}
           </div>
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-8 py-12">
+      <main className="max-w-7xl mx-auto px-12 py-20">
         {/* History Modal */}
         <AnimatePresence>
           {showHistory && (
@@ -554,34 +554,34 @@ function BrandBuilderApp() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-12 bg-[#F5F5F0]/95 backdrop-blur-xl"
+              className="fixed inset-0 z-[100] flex items-center justify-center p-12 bg-studio-bg/95 backdrop-blur-xl"
               onClick={() => setShowHistory(false)}
             >
               <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
+                initial={{ scale: 0.95, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                className="relative max-w-4xl w-full bg-white rounded-[3rem] shadow-2xl overflow-hidden flex flex-col h-[80vh]"
+                exit={{ scale: 0.95, opacity: 0 }}
+                className="relative max-w-5xl w-full bg-studio-paper rounded-[3rem] shadow-2xl overflow-hidden flex flex-col h-[85vh] border border-studio-ink/5"
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="p-8 border-b border-[#1A1A1A]/5 flex justify-between items-center">
-                  <h3 className="text-2xl font-light">Campaign History</h3>
-                  <button onClick={() => setShowHistory(false)} className="p-2 hover:bg-[#F5F5F0] rounded-full transition-colors">
+                <div className="p-10 border-b border-studio-ink/5 flex justify-between items-center">
+                  <h3 className="text-3xl font-serif italic">Archives</h3>
+                  <button onClick={() => setShowHistory(false)} className="p-3 hover:bg-studio-bg rounded-full transition-colors">
                     <X className="w-6 h-6" />
                   </button>
                 </div>
-                <div className="flex-1 overflow-y-auto p-8">
+                <div className="flex-1 overflow-y-auto p-10">
                   {history.length === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center opacity-20">
-                      <History className="w-12 h-12 mb-4" />
-                      <p className="uppercase tracking-widest text-xs font-bold">No campaigns yet</p>
+                    <div className="h-full flex flex-col items-center justify-center opacity-10">
+                      <History className="w-16 h-16 mb-6" />
+                      <p className="uppercase tracking-[0.3em] text-[10px] font-bold">No records found</p>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                       {history.map((record) => (
                         <div 
                           key={record.id}
-                          className="group bg-[#F5F5F0]/50 rounded-3xl p-6 border border-[#1A1A1A]/5 hover:bg-white hover:shadow-xl transition-all cursor-pointer relative"
+                          className="group brand-card p-6 cursor-pointer relative"
                           onClick={() => loadCampaign(record)}
                         >
                           <button
@@ -590,19 +590,18 @@ function BrandBuilderApp() {
                               setCampaignToDelete(record);
                             }}
                             className="absolute top-4 right-4 p-2 bg-white/80 backdrop-blur-sm text-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50 z-10"
-                            title="Delete Campaign"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
-                          <div className="aspect-video rounded-2xl overflow-hidden mb-4 bg-white">
-                            <img src={record.referenceImage} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Ref" />
+                          <div className="aspect-[4/3] rounded-2xl overflow-hidden mb-6 bg-studio-bg">
+                            <img src={record.referenceImage} className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700" alt="Ref" />
                           </div>
-                          <p className="text-xs font-bold uppercase tracking-widest opacity-30 mb-2">
+                          <p className="text-[9px] font-bold uppercase tracking-[0.2em] opacity-30 mb-3">
                             {record.createdAt?.toDate ? record.createdAt.toDate().toLocaleDateString() : 'Recent'}
                           </p>
-                          <h4 className="text-lg font-light line-clamp-1 mb-2">{record.description}</h4>
+                          <h4 className="text-xl font-serif italic line-clamp-1 mb-3">{record.description}</h4>
                           <div className="flex gap-2">
-                            <span className="text-[9px] uppercase tracking-widest font-bold px-2 py-1 bg-[#1A1A1A]/5 rounded-md opacity-50">
+                            <span className="text-[8px] uppercase tracking-[0.2em] font-bold px-2 py-1 bg-studio-ink/5 rounded-md opacity-40">
                               {record.style}
                             </span>
                           </div>
@@ -623,34 +622,34 @@ function BrandBuilderApp() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm"
+              className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-studio-ink/20 backdrop-blur-sm"
               onClick={() => setCampaignToDelete(null)}
             >
               <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
-                className="bg-white p-8 rounded-[2.5rem] shadow-2xl max-w-sm w-full text-center"
+                className="bg-studio-paper p-10 rounded-[3rem] shadow-2xl max-w-sm w-full text-center border border-studio-ink/5"
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
                   <Trash2 className="w-8 h-8" />
                 </div>
-                <h3 className="text-xl font-light mb-2">Delete Campaign?</h3>
-                <p className="text-sm opacity-50 mb-8 leading-relaxed">
-                  This action cannot be undone. This will permanently delete the campaign from your history.
+                <h3 className="text-2xl font-serif italic mb-2">Remove Record?</h3>
+                <p className="text-[11px] opacity-50 mb-8 leading-relaxed uppercase tracking-widest font-bold">
+                  This action is permanent and cannot be undone.
                 </p>
-                <div className="flex gap-3">
+                <div className="flex gap-4">
                   <button
                     onClick={() => setCampaignToDelete(null)}
-                    className="flex-1 px-6 py-3 rounded-full border border-[#1A1A1A]/10 text-xs font-bold uppercase tracking-widest hover:bg-[#F5F5F0] transition-colors"
+                    className="flex-1 btn-secondary !py-3 !px-4"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={() => deleteCampaign(campaignToDelete.id)}
                     disabled={isDeleting}
-                    className="flex-1 px-6 py-3 rounded-full bg-red-500 text-white text-xs font-bold uppercase tracking-widest hover:bg-red-600 transition-colors disabled:opacity-50"
+                    className="flex-1 bg-red-500 text-white py-3 rounded-full font-bold tracking-widest uppercase text-[9px] hover:bg-red-600 transition-all disabled:opacity-50"
                   >
                     {isDeleting ? 'Deleting...' : 'Delete'}
                   </button>
@@ -661,130 +660,133 @@ function BrandBuilderApp() {
         </AnimatePresence>
 
         {/* Input Section */}
-        <section className="mb-12">
-          <div className="max-w-3xl">
-            <h2 className="text-4xl font-light mb-8 leading-tight">
-              Describe your product, <br />
-              <span className="italic serif text-[#5A5A40]">visualize its future.</span>
-            </h2>
-            
-            {/* Style Toggles */}
-            <div className="flex flex-wrap gap-3 mb-4">
-              {styles.map((style) => (
-                <button
-                  key={style.id}
-                  onClick={() => setSelectedStyle(style.id)}
-                  className={`px-4 py-2 rounded-full text-xs font-semibold tracking-wider uppercase flex items-center gap-2 transition-all ${
-                    selectedStyle === style.id 
-                      ? 'bg-[#1A1A1A] text-white shadow-lg scale-105' 
-                      : 'bg-white border border-[#1A1A1A]/10 text-[#1A1A1A]/60 hover:border-[#1A1A1A]/30'
-                  }`}
-                >
-                  {style.icon}
-                  {style.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Filter Toggles */}
-            <div className="flex flex-wrap gap-2 mb-8">
-              <div className="flex items-center gap-2 mr-2 opacity-40">
-                <Filter className="w-3 h-3" />
-                <span className="text-[10px] uppercase font-bold tracking-widest">Filters</span>
+        <section className="mb-32">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
+            <div className="lg:col-span-7">
+              <div className="flex items-center gap-4 mb-8">
+                <span className="text-[10px] font-bold uppercase tracking-[0.3em] opacity-30">01</span>
+                <h2 className="text-4xl font-serif italic">The Brief</h2>
               </div>
-              {filters.map((filter) => (
-                <button
-                  key={filter.id}
-                  onClick={() => setActiveFilter(filter.id)}
-                  className={`px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-widest uppercase transition-all ${
-                    activeFilter === filter.id 
-                      ? 'bg-[#5A5A40] text-white' 
-                      : 'bg-white/50 text-[#1A1A1A]/40 hover:bg-white hover:text-[#1A1A1A]/60'
-                  }`}
-                >
-                  {filter.label}
-                </button>
-              ))}
-            </div>
-            
-            <div className="flex items-center justify-between mb-2">
-              <button
-                onClick={() => setIsThinkingMode(!isThinkingMode)}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-bold tracking-widest uppercase transition-all ${
-                  isThinkingMode 
-                    ? 'bg-[#1A1A1A] text-white shadow-md' 
-                    : 'bg-white/50 text-[#1A1A1A]/40 hover:bg-white hover:text-[#1A1A1A]/60'
-                }`}
-                title="Enable deep reasoning for complex brand strategy"
-              >
-                <Brain className={`w-3 h-3 ${isThinkingMode ? 'animate-pulse' : ''}`} />
-                Thinking Mode
-              </button>
-            </div>
+              <div className="brand-card p-10 bg-studio-paper">
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Describe your creative vision..."
+                  className="input-brief"
+                  rows={4}
+                />
+                
+                {/* Style Toggles */}
+                <div className="flex flex-wrap gap-4 mt-8">
+                  {styles.map((style) => (
+                    <button
+                      key={style.id}
+                      onClick={() => setSelectedStyle(style.id)}
+                      className={`px-6 py-3 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] transition-all border flex items-center gap-2 ${
+                        selectedStyle === style.id 
+                          ? 'bg-studio-ink text-white border-studio-ink shadow-lg scale-105' 
+                          : 'bg-white text-studio-ink border-studio-ink/10 hover:border-studio-ink/30'
+                      }`}
+                    >
+                      {style.icon}
+                      {style.label}
+                    </button>
+                  ))}
+                </div>
 
-            <div className="relative group">
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="e.g., A sleek, minimalist obsidian water bottle with a matte finish and a copper cap..."
-                className="w-full bg-white border border-[#1A1A1A]/10 rounded-2xl p-6 text-lg focus:outline-none focus:ring-2 focus:ring-[#5A5A40]/20 transition-all min-h-[120px] shadow-sm group-hover:shadow-md"
-              />
-              <div className="absolute bottom-4 right-4 flex gap-3">
-                <button
-                  onClick={generateReference}
-                  disabled={isGeneratingRef || isGeneratingCampaign || !description.trim()}
-                  className="bg-white border border-[#1A1A1A]/10 text-[#1A1A1A] px-6 py-3 rounded-full flex items-center gap-2 hover:bg-[#F5F5F0] disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95 shadow-sm"
-                >
-                  {isGeneratingRef ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Drafting...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-4 h-4" />
-                      Generate Reference
-                    </>
+                {/* Filter Toggles */}
+                <div className="flex flex-wrap gap-3 mt-8">
+                  <div className="flex items-center gap-2 mr-2 opacity-40">
+                    <Filter className="w-3 h-3" />
+                    <span className="text-[9px] uppercase font-bold tracking-[0.2em]">Filters</span>
+                  </div>
+                  {filters.map((filter) => (
+                    <button
+                      key={filter.id}
+                      onClick={() => setActiveFilter(filter.id)}
+                      className={`px-4 py-2 rounded-lg text-[9px] font-bold tracking-[0.2em] uppercase transition-all ${
+                        activeFilter === filter.id 
+                          ? 'bg-studio-ink text-white' 
+                          : 'bg-studio-ink/5 text-studio-ink/40 hover:bg-studio-ink/10'
+                      }`}
+                    >
+                      {filter.label}
+                    </button>
+                  ))}
+                </div>
+                
+                <div className="mt-12 flex flex-col sm:flex-row gap-4">
+                  <button
+                    onClick={() => setIsThinkingMode(!isThinkingMode)}
+                    className={`flex items-center justify-center gap-3 px-6 py-4 rounded-full text-[10px] font-bold tracking-[0.2em] uppercase transition-all border ${
+                      isThinkingMode 
+                        ? 'bg-studio-ink text-white border-studio-ink shadow-md' 
+                        : 'bg-white text-studio-ink/40 border-studio-ink/10 hover:border-studio-ink/30'
+                    }`}
+                  >
+                    <Brain className={`w-4 h-4 ${isThinkingMode ? 'animate-pulse' : ''}`} />
+                    Thinking Mode
+                  </button>
+
+                  <button
+                    onClick={generateReference}
+                    disabled={isGeneratingRef || isGeneratingCampaign || !description.trim()}
+                    className="flex-1 btn-primary flex items-center justify-center gap-3"
+                  >
+                    {isGeneratingRef ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Drafting...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-5 h-5" />
+                        Generate Reference
+                      </>
+                    )}
+                  </button>
+
+                  {referenceImage && (
+                    <button
+                      onClick={generateCampaign}
+                      disabled={isGeneratingRef || isGeneratingCampaign || !description.trim()}
+                      className="flex-1 btn-primary bg-studio-accent flex items-center justify-center gap-3"
+                    >
+                      {isGeneratingCampaign ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          Launching...
+                        </>
+                      ) : (
+                        <>
+                          Launch Campaign
+                          <ArrowRight className="w-5 h-5" />
+                        </>
+                      )}
+                    </button>
                   )}
-                </button>
-                <button
-                  onClick={generateCampaign}
-                  disabled={isGeneratingRef || isGeneratingCampaign || !description.trim() || !referenceImage}
-                  className="bg-[#1A1A1A] text-white px-6 py-3 rounded-full flex items-center gap-2 hover:bg-[#5A5A40] disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95 shadow-lg"
-                >
-                  {isGeneratingCampaign ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Launching...
-                    </>
-                  ) : (
-                    <>
-                      Generate Campaign
-                      <ArrowRight className="w-4 h-4" />
-                    </>
-                  )}
-                </button>
+                </div>
               </div>
             </div>
           </div>
         </section>
 
         {/* Brand Guidelines Section (Editable & Collapsible) */}
-        <section className="mb-16">
-          <div className="bg-white rounded-[2.5rem] border border-[#1A1A1A]/5 shadow-sm overflow-hidden">
+        <section className="mb-32">
+          <div className="brand-card overflow-hidden">
             <button 
               onClick={() => setIsGuidelinesOpen(!isGuidelinesOpen)}
-              className="w-full p-8 flex items-center justify-between hover:bg-[#F5F5F0]/30 transition-colors"
+              className="w-full p-10 flex items-center justify-between hover:bg-studio-ink/5 transition-colors"
             >
-              <div className="flex items-center gap-3 opacity-40 uppercase tracking-[0.2em] text-[10px] font-bold">
-                <div className="w-4 h-[1px] bg-current" />
+              <div className="flex items-center gap-4 opacity-40 uppercase tracking-[0.3em] text-[10px] font-bold">
+                <div className="w-6 h-[1px] bg-current" />
                 Brand Identity Guidelines
               </div>
               <motion.div
                 animate={{ rotate: isGuidelinesOpen ? 180 : 0 }}
                 transition={{ duration: 0.3 }}
               >
-                <ArrowRight className="w-4 h-4 rotate-90 opacity-30" />
+                <ArrowRight className="w-5 h-5 rotate-90 opacity-30" />
               </motion.div>
             </button>
 
@@ -796,15 +798,15 @@ function BrandBuilderApp() {
                   exit={{ height: 0, opacity: 0 }}
                   transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
                 >
-                  <div className="px-8 pb-12 grid grid-cols-1 md:grid-cols-3 gap-12 border-t border-[#1A1A1A]/5 pt-8">
+                  <div className="px-10 pb-16 grid grid-cols-1 md:grid-cols-3 gap-16 border-t border-studio-ink/5 pt-12">
                     {/* Colors */}
                     <div>
-                      <h4 className="text-[10px] font-bold uppercase tracking-widest mb-4 opacity-50">Color Palette</h4>
+                      <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] mb-6 opacity-50">Color Palette</h4>
                       <div className="flex gap-4">
                         {guidelines.colors.map((color, idx) => (
-                          <div key={`color-input-${idx}`} className="flex flex-col gap-2">
+                          <div key={`color-input-${idx}`} className="flex flex-col gap-3">
                             <div 
-                              className="w-12 h-12 rounded-2xl border border-[#1A1A1A]/5 shadow-inner relative overflow-hidden" 
+                              className="w-14 h-14 rounded-2xl border border-studio-ink/10 shadow-inner relative overflow-hidden" 
                               style={{ backgroundColor: color }}
                             >
                               <input 
@@ -818,7 +820,7 @@ function BrandBuilderApp() {
                               type="text"
                               value={color}
                               onChange={(e) => updateColor(idx, e.target.value)}
-                              className="text-[9px] font-mono w-12 bg-transparent border-none focus:outline-none opacity-40 hover:opacity-100 transition-opacity text-center"
+                              className="text-[9px] font-mono w-14 bg-transparent border-none focus:outline-none opacity-40 hover:opacity-100 transition-opacity text-center"
                             />
                           </div>
                         ))}
@@ -827,24 +829,24 @@ function BrandBuilderApp() {
 
                     {/* Fonts */}
                     <div>
-                      <h4 className="text-[10px] font-bold uppercase tracking-widest mb-4 opacity-50">Typography</h4>
+                      <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] mb-6 opacity-50">Typography</h4>
                       <input 
                         type="text"
                         value={guidelines.fonts}
                         onChange={(e) => updateGuideline('fonts', e.target.value)}
-                        placeholder="e.g., Inter & Cormorant Garamond"
-                        className="w-full bg-transparent border-b border-[#1A1A1A]/10 py-1 text-lg serif italic text-[#5A5A40] focus:outline-none focus:border-[#5A5A40] transition-colors"
+                        placeholder="e.g., Playfair Display, Inter"
+                        className="w-full bg-transparent border-b border-studio-ink/10 py-2 text-xl font-serif italic focus:outline-none focus:border-studio-ink transition-colors"
                       />
                     </div>
 
                     {/* Tone */}
                     <div>
-                      <h4 className="text-[10px] font-bold uppercase tracking-widest mb-4 opacity-50">Tone of Voice</h4>
+                      <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] mb-6 opacity-50">Tone of Voice</h4>
                       <textarea 
                         value={guidelines.tone}
                         onChange={(e) => updateGuideline('tone', e.target.value)}
                         placeholder="e.g., Sophisticated and minimalist."
-                        className="w-full bg-transparent border-b border-[#1A1A1A]/10 py-1 text-sm leading-relaxed opacity-70 focus:outline-none focus:border-[#5A5A40] transition-colors resize-none h-20"
+                        className="w-full bg-transparent border-b border-studio-ink/10 py-2 text-sm leading-relaxed opacity-70 focus:outline-none focus:border-studio-ink transition-colors resize-none h-24"
                       />
                     </div>
                   </div>
@@ -866,7 +868,7 @@ function BrandBuilderApp() {
         )}
 
         {/* Results Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
           <AnimatePresence mode="popLayout">
             {isGeneratingCampaign && !results.length && (
               [1, 2, 3].map((i) => (
@@ -875,10 +877,10 @@ function BrandBuilderApp() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="aspect-square bg-white border border-[#1A1A1A]/5 rounded-3xl flex flex-col items-center justify-center gap-4 animate-pulse"
+                  className="aspect-square brand-card flex flex-col items-center justify-center gap-6 animate-pulse"
                 >
-                  <div className="w-12 h-12 bg-[#1A1A1A]/5 rounded-full" />
-                  <div className="h-4 w-32 bg-[#1A1A1A]/5 rounded-full" />
+                  <div className="w-16 h-16 bg-studio-ink/5 rounded-full" />
+                  <div className="h-2 w-32 bg-studio-ink/5 rounded-full" />
                 </motion.div>
               ))
             )}
@@ -886,75 +888,60 @@ function BrandBuilderApp() {
             {results.map((result, idx) => (
               <motion.div
                 key={result.medium}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.1 }}
-                className="group relative"
+                className="group"
               >
-                <div className="bg-white rounded-[2rem] overflow-hidden shadow-sm border border-[#1A1A1A]/5 transition-all hover:shadow-xl hover:-translate-y-1">
+                <div className="brand-card overflow-hidden">
                   <div 
-                    className={`aspect-square relative overflow-hidden bg-[#F0F0F0] cursor-zoom-in group/image ${result.medium === 'newspaper' ? 'grayscale contrast-125 brightness-95' : ''}`}
+                    className={`aspect-square relative overflow-hidden bg-studio-bg cursor-zoom-in group/image ${result.medium === 'newspaper' ? 'grayscale contrast-125 brightness-95' : ''}`}
                     onClick={() => setZoomedImage(result)}
                   >
                     <img
                       src={result.url}
                       alt={result.medium}
                       style={{ filter: getFilterStyle(activeFilter) }}
-                      className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 ${result.medium === 'newspaper' ? 'mix-blend-multiply opacity-90' : ''}`}
+                      className={`w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110 ${result.medium === 'newspaper' ? 'mix-blend-multiply opacity-90' : ''}`}
                       referrerPolicy="no-referrer"
                     />
                     {activeFilter === 'vignette' && (
                       <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_100px_rgba(0,0,0,0.5)]" />
                     )}
-                    <div className="absolute inset-0 bg-black/0 group-hover/image:bg-black/10 transition-colors flex items-center justify-center">
-                      <Maximize2 className="text-white opacity-0 group-hover/image:opacity-100 transition-opacity w-8 h-8" />
+                    <div className="absolute inset-0 bg-studio-ink/0 group-hover/image:bg-studio-ink/10 transition-colors flex items-center justify-center">
+                      <Maximize2 className="text-white opacity-0 group-hover/image:opacity-100 transition-opacity w-10 h-10" />
                     </div>
                     {result.medium === 'newspaper' && (
                       <div className="absolute inset-0 pointer-events-none opacity-20 mix-blend-overlay bg-[url('https://www.transparenttextures.com/patterns/paper-fibers.png')]" />
                     )}
-                    <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 shadow-sm">
+                    <div className="absolute top-6 left-6 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full text-[9px] font-bold uppercase tracking-[0.2em] flex items-center gap-2 shadow-sm">
                       {result.medium === 'billboard' && <Layout className="w-3 h-3" />}
                       {result.medium === 'newspaper' && <Newspaper className="w-3 h-3" />}
                       {result.medium === 'social' && <Instagram className="w-3 h-3" />}
                       {result.medium}
                     </div>
                   </div>
-                  <div className="p-8">
-                    <div className="mb-6">
-                      <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] mb-4 opacity-30 flex items-center gap-2">
-                        <div className="w-3 h-[1px] bg-current" />
-                        Ad Copy Draft
+                  <div className="p-10">
+                    <div className="mb-8">
+                      <h3 className="text-[9px] font-bold uppercase tracking-[0.3em] mb-6 opacity-30 flex items-center gap-3">
+                        <div className="w-4 h-[1px] bg-current" />
+                        Creative Copy
                       </h3>
-                      <p className={`text-lg leading-snug ${result.medium === 'billboard' ? 'font-bold tracking-tight' : result.medium === 'newspaper' ? 'serif italic' : 'text-sm opacity-80'}`}>
+                      <p className={`text-xl leading-relaxed ${result.medium === 'billboard' ? 'font-serif italic' : result.medium === 'newspaper' ? 'font-serif' : 'text-sm opacity-70'}`}>
                         "{result.copy}"
                       </p>
                     </div>
                     
                     {result.medium === 'social' && (
-                      <div className="flex gap-4 pt-6 border-t border-[#1A1A1A]/5">
-                        <motion.div
-                          initial={{ scale: 0, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.1 }}
-                          whileHover={{ scale: 1.2 }}
-                        >
-                          <Facebook className="w-4 h-4 text-[#1A1A1A]/20 hover:text-[#1877F2] transition-colors cursor-pointer" />
+                      <div className="flex gap-6 pt-8 border-t border-studio-ink/5">
+                        <motion.div whileHover={{ scale: 1.2, y: -2 }}>
+                          <Facebook className="w-4 h-4 text-studio-ink/20 hover:text-[#1877F2] transition-colors cursor-pointer" />
                         </motion.div>
-                        <motion.div
-                          initial={{ scale: 0, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.2 }}
-                          whileHover={{ scale: 1.2 }}
-                        >
-                          <Twitter className="w-4 h-4 text-[#1A1A1A]/20 hover:text-[#1DA1F2] transition-colors cursor-pointer" />
+                        <motion.div whileHover={{ scale: 1.2, y: -2 }}>
+                          <Twitter className="w-4 h-4 text-studio-ink/20 hover:text-[#1DA1F2] transition-colors cursor-pointer" />
                         </motion.div>
-                        <motion.div
-                          initial={{ scale: 0, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.3 }}
-                          whileHover={{ scale: 1.2 }}
-                        >
-                          <Linkedin className="w-4 h-4 text-[#1A1A1A]/20 hover:text-[#0A66C2] transition-colors cursor-pointer" />
+                        <motion.div whileHover={{ scale: 1.2, y: -2 }}>
+                          <Linkedin className="w-4 h-4 text-studio-ink/20 hover:text-[#0A66C2] transition-colors cursor-pointer" />
                         </motion.div>
                       </div>
                     )}
@@ -970,23 +957,23 @@ function BrandBuilderApp() {
           <motion.div 
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="fixed bottom-8 right-8 w-48 bg-white p-4 rounded-3xl shadow-2xl border border-[#1A1A1A]/10 z-40 cursor-zoom-in group"
+            className="fixed bottom-12 right-12 w-56 bg-studio-paper p-6 rounded-[2rem] shadow-2xl border border-studio-ink/10 z-40 cursor-zoom-in group"
             onClick={() => referenceImage && setZoomedImage({ url: referenceImage, medium: 'social', prompt: 'Reference Shot', copy: '' })}
           >
-            <div className="text-[10px] font-bold uppercase tracking-widest mb-3 opacity-40 flex items-center justify-center gap-2">
+            <div className="text-[9px] font-bold uppercase tracking-[0.3em] mb-4 opacity-40 flex items-center justify-center gap-2">
               <ImageIcon className="w-3 h-3" />
-              Reference Shot
+              Reference
             </div>
-            <div className="aspect-square rounded-xl overflow-hidden bg-[#F0F0F0] border border-[#1A1A1A]/5 relative">
+            <div className="aspect-square rounded-2xl overflow-hidden bg-studio-bg border border-studio-ink/5 relative">
               {isGeneratingRef ? (
                 <div className="w-full h-full flex items-center justify-center">
                   <motion.div
                     animate={{ opacity: [0.3, 0.6, 0.3] }}
                     transition={{ duration: 1.5, repeat: Infinity }}
-                    className="w-full h-full bg-[#1A1A1A]/5"
+                    className="w-full h-full bg-studio-ink/5"
                   />
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-6 h-6 border-2 border-[#1A1A1A]/20 border-t-[#1A1A1A] rounded-full animate-spin" />
+                    <Loader2 className="w-6 h-6 text-studio-ink/20 animate-spin" />
                   </div>
                 </div>
               ) : (
@@ -994,17 +981,17 @@ function BrandBuilderApp() {
                   <img 
                     src={referenceImage!} 
                     alt="Reference" 
-                    className="w-full h-full object-cover transition-transform group-hover:scale-110"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 grayscale group-hover:grayscale-0"
                     referrerPolicy="no-referrer"
                   />
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
-                    <Maximize2 className="text-white opacity-0 group-hover:opacity-100 transition-opacity w-4 h-4" />
+                  <div className="absolute inset-0 bg-studio-ink/0 group-hover:bg-studio-ink/10 transition-colors flex items-center justify-center">
+                    <Maximize2 className="text-white opacity-0 group-hover:opacity-100 transition-opacity w-6 h-6" />
                   </div>
                 </>
               )}
             </div>
-            <p className="text-[10px] mt-3 leading-tight opacity-50 text-center">
-              {isGeneratingRef ? 'Generating reference...' : 'Click to enlarge reference'}
+            <p className="text-[8px] mt-4 leading-tight opacity-40 text-center uppercase tracking-[0.2em] font-bold">
+              {isGeneratingRef ? 'Drafting...' : 'View Reference'}
             </p>
           </motion.div>
         )}
@@ -1016,24 +1003,24 @@ function BrandBuilderApp() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-12 bg-[#F5F5F0]/95 backdrop-blur-xl"
+              className="fixed inset-0 z-[100] flex items-center justify-center p-12 bg-studio-bg/95 backdrop-blur-xl"
               onClick={() => setZoomedImage(null)}
             >
               <button 
-                className="absolute top-8 right-8 p-3 bg-[#1A1A1A] text-white rounded-full hover:bg-[#5A5A40] transition-colors z-[110]"
+                className="absolute top-12 right-12 p-4 bg-studio-ink text-white rounded-full hover:bg-studio-accent transition-colors z-[110]"
                 onClick={() => setZoomedImage(null)}
               >
                 <X className="w-6 h-6" />
               </button>
               
               <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
+                initial={{ scale: 0.95, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                className="relative max-w-5xl w-full bg-white rounded-[3rem] shadow-2xl overflow-hidden flex flex-col md:flex-row"
+                exit={{ scale: 0.95, opacity: 0 }}
+                className="relative max-w-6xl w-full bg-studio-paper rounded-[3rem] shadow-2xl overflow-hidden flex flex-col md:flex-row border border-studio-ink/5"
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className={`flex-1 bg-[#F0F0F0] relative ${zoomedImage.medium === 'newspaper' ? 'grayscale contrast-125 brightness-95' : ''}`}>
+                <div className={`flex-1 bg-studio-bg relative ${zoomedImage.medium === 'newspaper' ? 'grayscale contrast-125 brightness-95' : ''}`}>
                   <img 
                     src={zoomedImage.url} 
                     alt="Zoomed" 
@@ -1049,30 +1036,30 @@ function BrandBuilderApp() {
                   )}
                 </div>
                 
-                <div className="w-full md:w-80 p-8 md:p-12 flex flex-col justify-center bg-white">
-                  <div className="mb-8">
-                    <div className="text-[10px] font-bold uppercase tracking-[0.2em] mb-4 opacity-30 flex items-center gap-2">
-                      <div className="w-4 h-[1px] bg-current" />
+                <div className="w-full md:w-96 p-12 flex flex-col justify-center bg-studio-paper">
+                  <div className="mb-12">
+                    <div className="text-[10px] font-bold uppercase tracking-[0.3em] mb-6 opacity-30 flex items-center gap-3">
+                      <div className="w-6 h-[1px] bg-current" />
                       Medium
                     </div>
-                    <h3 className="text-2xl font-light capitalize">{zoomedImage.medium}</h3>
+                    <h3 className="text-4xl font-serif italic capitalize">{zoomedImage.medium}</h3>
                   </div>
 
                   {zoomedImage.copy && (
-                    <div className="mb-8">
-                      <div className="text-[10px] font-bold uppercase tracking-[0.2em] mb-4 opacity-30 flex items-center gap-2">
-                        <div className="w-4 h-[1px] bg-current" />
-                        Ad Copy
+                    <div className="mb-12">
+                      <div className="text-[10px] font-bold uppercase tracking-[0.3em] mb-6 opacity-30 flex items-center gap-3">
+                        <div className="w-6 h-[1px] bg-current" />
+                        Creative Copy
                       </div>
-                      <p className="text-lg serif italic leading-relaxed opacity-80">
+                      <p className="text-2xl font-serif italic leading-relaxed opacity-80">
                         "{zoomedImage.copy}"
                       </p>
                     </div>
                   )}
 
-                  <div className="mt-auto pt-8 border-t border-[#1A1A1A]/5">
-                    <p className="text-[10px] uppercase tracking-widest opacity-30 font-bold">
-                      Brand Builder Concept
+                  <div className="mt-auto pt-12 border-t border-studio-ink/5">
+                    <p className="text-[10px] uppercase tracking-[0.3em] opacity-30 font-bold">
+                      Brand Studio Concept
                     </p>
                   </div>
                 </div>
@@ -1083,9 +1070,12 @@ function BrandBuilderApp() {
       </main>
 
       {/* Footer Decoration */}
-      <footer className="mt-24 py-12 border-t border-[#1A1A1A]/10 px-8 text-center">
-        <p className="text-xs uppercase tracking-[0.2em] opacity-30">
-          Built with Gemini Nano-Banana &bull; No People Policy Enforced
+      <footer className="mt-48 py-20 border-t border-studio-ink/5 px-12 text-center">
+        <div className="max-w-xs mx-auto mb-8 opacity-10">
+          <Sparkles className="w-8 h-8 mx-auto" />
+        </div>
+        <p className="text-[10px] uppercase tracking-[0.4em] opacity-30 font-bold">
+          Creative Intelligence &bull; Brand Studio 2026
         </p>
       </footer>
     </div>
