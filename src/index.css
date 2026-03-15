@@ -6,10 +6,10 @@
   --font-serif: "Playfair Display", serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
   
-  --color-studio-bg: #F8F7F4;
-  --color-studio-ink: #121212;
-  --color-studio-accent: #2D3436;
-  --color-studio-paper: #FFFFFF;
+  --color-studio-bg: #0A0A0A;
+  --color-studio-ink: #F8F7F4;
+  --color-studio-accent: #FFFFFF;
+  --color-studio-paper: #141414;
 }
 
 @layer base {
@@ -23,29 +23,38 @@
 }
 
 .studio-grid {
-  background-image: radial-gradient(#121212 0.5px, transparent 0.5px);
-  background-size: 24px 24px;
-  opacity: 0.03;
+  position: relative;
+}
+
+.studio-grid::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(#FFFFFF 0.5px, transparent 0.5px);
+  background-size: 32px 32px;
+  opacity: 0.05;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .brand-card {
-  @apply bg-studio-paper border border-studio-ink/5 rounded-[2rem] shadow-sm transition-all duration-500 hover:shadow-xl hover:border-studio-ink/10;
+  @apply bg-studio-paper border border-white/5 rounded-[2rem] shadow-2xl transition-all duration-500 hover:border-white/20;
 }
 
 .input-brief {
-  @apply bg-transparent border-b-2 border-studio-ink/10 focus:border-studio-ink outline-none transition-colors py-4 text-2xl font-serif italic placeholder:opacity-20 w-full;
+  @apply bg-transparent border-b-2 border-white/10 focus:border-white outline-none transition-colors py-4 text-2xl font-serif italic placeholder:opacity-20 w-full;
 }
 
 .btn-primary {
-  @apply bg-studio-ink text-white px-8 py-4 rounded-full font-bold tracking-widest uppercase text-xs hover:bg-studio-accent transition-all active:scale-95 disabled:opacity-50;
+  @apply bg-white text-black px-8 py-4 rounded-full font-bold tracking-widest uppercase text-xs hover:bg-studio-ink hover:text-white border border-white transition-all active:scale-95 disabled:opacity-50;
 }
 
 .btn-secondary {
-  @apply border border-studio-ink/10 px-8 py-4 rounded-full font-bold tracking-widest uppercase text-xs hover:bg-studio-ink hover:text-white transition-all active:scale-95;
+  @apply border border-white/10 px-8 py-4 rounded-full font-bold tracking-widest uppercase text-xs hover:bg-white hover:text-black transition-all active:scale-95;
 }
 
 .glass-panel {
-  @apply bg-white/80 backdrop-blur-md border border-white/20;
+  @apply bg-black/40 backdrop-blur-md border border-white/10;
 }
 
 .markdown-body {

@@ -104,16 +104,16 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     const { hasError } = this.state;
     if (hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-[#F5F5F0] p-8">
-          <div className="max-w-md w-full bg-white p-8 rounded-[2.5rem] shadow-xl border border-red-100 text-center">
-            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-light mb-4">Something went wrong</h2>
-            <p className="text-sm opacity-60 mb-8 leading-relaxed">
+        <div className="min-h-screen flex items-center justify-center bg-studio-bg p-8 studio-grid">
+          <div className="max-w-md w-full relative z-10 brand-card p-12 text-center">
+            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-6" />
+            <h2 className="text-2xl font-serif italic mb-4">Something went wrong</h2>
+            <p className="text-sm opacity-50 mb-12 leading-relaxed font-light">
               We encountered an unexpected error. Please try refreshing the page.
             </p>
             <button 
               onClick={() => window.location.reload()}
-              className="w-full bg-[#1A1A1A] text-white py-4 rounded-full font-bold tracking-widest uppercase text-xs hover:bg-[#5A5A40] transition-colors"
+              className="w-full btn-primary"
             >
               Refresh App
             </button>
@@ -469,8 +469,8 @@ function BrandBuilderApp() {
 
   if (!isAuthReady) {
     return (
-      <div className="min-h-screen bg-[#F5F5F0] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin opacity-20" />
+      <div className="min-h-screen bg-studio-bg flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-white opacity-20" />
       </div>
     );
   }
@@ -478,14 +478,14 @@ function BrandBuilderApp() {
   if (!user) {
     return (
       <div className="min-h-screen bg-studio-bg text-studio-ink font-sans flex items-center justify-center p-8 studio-grid">
-        <div className="max-w-md w-full">
+        <div className="max-w-md w-full relative z-10">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="brand-card p-12 text-center"
           >
             <div className="w-20 h-20 bg-studio-ink rounded-full flex items-center justify-center mx-auto mb-8 shadow-2xl">
-              <Sparkles className="text-white w-10 h-10" />
+              <Sparkles className="text-black w-10 h-10" />
             </div>
             <h1 className="text-4xl font-serif mb-4 italic">Brand Builder</h1>
             <p className="text-sm opacity-50 mb-12 leading-relaxed font-light">
@@ -505,48 +505,49 @@ function BrandBuilderApp() {
   }
 
   return (
-    <div className="min-h-screen bg-studio-bg text-studio-ink font-sans selection:bg-studio-ink selection:text-white studio-grid">
-      {/* Header */}
-      <header className="border-b border-studio-ink/5 py-8 px-12 flex justify-between items-center bg-white/50 backdrop-blur-md sticky top-0 z-50">
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 bg-studio-ink rounded-full flex items-center justify-center">
-            <Sparkles className="text-white w-5 h-5" />
+    <div className="min-h-screen bg-studio-bg text-studio-ink font-sans selection:bg-white selection:text-black studio-grid overflow-x-hidden">
+      <div className="relative z-10">
+        {/* Header */}
+        <header className="border-b border-white/5 py-6 md:py-8 px-6 md:px-12 flex justify-between items-center bg-black/50 backdrop-blur-md sticky top-0 z-50">
+        <div className="flex items-center gap-3 md:gap-4">
+          <div className="w-8 h-8 md:w-10 md:h-10 bg-studio-ink rounded-full flex items-center justify-center">
+            <Sparkles className="text-black w-4 h-4 md:w-5 md:h-5" />
           </div>
-          <h1 className="text-2xl font-serif italic tracking-tight">Brand Builder</h1>
+          <h1 className="text-xl md:text-2xl font-serif italic tracking-tight">Brand Builder</h1>
         </div>
         
-        <div className="flex items-center gap-8">
+        <div className="flex items-center gap-4 md:gap-8">
           <button 
             onClick={() => setShowHistory(!showHistory)}
-            className="text-[10px] uppercase tracking-[0.2em] opacity-40 font-bold hover:opacity-100 transition-opacity flex items-center gap-2"
+            className="text-[9px] md:text-[10px] uppercase tracking-[0.2em] opacity-40 font-bold hover:opacity-100 transition-opacity flex items-center gap-2"
           >
-            <History className="w-4 h-4" />
-            Archives
+            <History className="w-3.5 h-3.5 md:w-4 md:h-4" />
+            <span className="hidden xs:inline">Archives</span>
           </button>
-          <div className="h-4 w-[1px] bg-studio-ink/10" />
-          <div className="flex items-center gap-4">
+          <div className="h-4 w-[1px] bg-white/10 hidden xs:block" />
+          <div className="flex items-center gap-3 md:gap-4">
             <div className="text-right hidden sm:block">
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em]">{user.displayName}</p>
+              <p className="text-[9px] md:text-[10px] font-bold uppercase tracking-[0.2em]">{user.displayName}</p>
               <button 
                 onClick={handleLogout}
-                className="text-[9px] uppercase tracking-[0.2em] opacity-30 hover:opacity-100 transition-opacity flex items-center gap-1 ml-auto"
+                className="text-[8px] md:text-[9px] uppercase tracking-[0.2em] opacity-30 hover:opacity-100 transition-opacity flex items-center gap-1 ml-auto"
               >
-                <LogOut className="w-3 h-3" />
+                <LogOut className="w-2.5 h-2.5 md:w-3 md:h-3" />
                 Logout
               </button>
             </div>
             {user.photoURL ? (
-              <img src={user.photoURL} alt="User" className="w-10 h-10 rounded-full border border-studio-ink/10 grayscale hover:grayscale-0 transition-all" />
+              <img src={user.photoURL} alt="User" className="w-8 h-8 md:w-10 md:h-10 rounded-full border border-white/10 grayscale hover:grayscale-0 transition-all" />
             ) : (
-              <div className="w-10 h-10 rounded-full bg-studio-ink/5 flex items-center justify-center">
-                <UserIcon className="w-5 h-5 opacity-30" />
+              <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/5 flex items-center justify-center">
+                <UserIcon className="w-4 h-4 md:w-5 md:h-5 opacity-30" />
               </div>
             )}
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-12 py-20">
+      <main className="max-w-7xl mx-auto px-6 md:px-12 py-12 md:py-20">
         {/* History Modal */}
         <AnimatePresence>
           {showHistory && (
@@ -564,9 +565,9 @@ function BrandBuilderApp() {
                 className="relative max-w-5xl w-full bg-studio-paper rounded-[3rem] shadow-2xl overflow-hidden flex flex-col h-[85vh] border border-studio-ink/5"
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="p-10 border-b border-studio-ink/5 flex justify-between items-center">
+                <div className="p-10 border-b border-white/5 flex justify-between items-center">
                   <h3 className="text-3xl font-serif italic">Archives</h3>
-                  <button onClick={() => setShowHistory(false)} className="p-3 hover:bg-studio-bg rounded-full transition-colors">
+                  <button onClick={() => setShowHistory(false)} className="p-3 hover:bg-white/5 rounded-full transition-colors">
                     <X className="w-6 h-6" />
                   </button>
                 </div>
@@ -589,11 +590,11 @@ function BrandBuilderApp() {
                               e.stopPropagation();
                               setCampaignToDelete(record);
                             }}
-                            className="absolute top-4 right-4 p-2 bg-white/80 backdrop-blur-sm text-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50 z-10"
+                            className="absolute top-4 right-4 p-2 bg-black/80 backdrop-blur-sm text-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500 hover:text-white z-10"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
-                          <div className="aspect-[4/3] rounded-2xl overflow-hidden mb-6 bg-studio-bg">
+                          <div className="aspect-[4/3] rounded-2xl overflow-hidden mb-6 bg-white/5">
                             <img src={record.referenceImage} className="w-full h-full object-cover grayscale group-hover:grayscale-0 group-hover:scale-105 transition-all duration-700" alt="Ref" />
                           </div>
                           <p className="text-[9px] font-bold uppercase tracking-[0.2em] opacity-30 mb-3">
@@ -601,7 +602,7 @@ function BrandBuilderApp() {
                           </p>
                           <h4 className="text-xl font-serif italic line-clamp-1 mb-3">{record.description}</h4>
                           <div className="flex gap-2">
-                            <span className="text-[8px] uppercase tracking-[0.2em] font-bold px-2 py-1 bg-studio-ink/5 rounded-md opacity-40">
+                            <span className="text-[8px] uppercase tracking-[0.2em] font-bold px-2 py-1 bg-white/5 rounded-md opacity-40">
                               {record.style}
                             </span>
                           </div>
@@ -632,7 +633,7 @@ function BrandBuilderApp() {
                 className="bg-studio-paper p-10 rounded-[3rem] shadow-2xl max-w-sm w-full text-center border border-studio-ink/5"
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                <div className="w-16 h-16 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
                   <Trash2 className="w-8 h-8" />
                 </div>
                 <h3 className="text-2xl font-serif italic mb-2">Remove Record?</h3>
@@ -649,7 +650,7 @@ function BrandBuilderApp() {
                   <button
                     onClick={() => deleteCampaign(campaignToDelete.id)}
                     disabled={isDeleting}
-                    className="flex-1 bg-red-500 text-white py-3 rounded-full font-bold tracking-widest uppercase text-[9px] hover:bg-red-600 transition-all disabled:opacity-50"
+                    className="flex-1 bg-red-600 text-white py-3 rounded-full font-bold tracking-widest uppercase text-[9px] hover:bg-red-700 transition-all disabled:opacity-50"
                   >
                     {isDeleting ? 'Deleting...' : 'Delete'}
                   </button>
@@ -667,12 +668,12 @@ function BrandBuilderApp() {
                 <span className="text-[10px] font-bold uppercase tracking-[0.3em] opacity-30">01</span>
                 <h2 className="text-4xl font-serif italic">The Brief</h2>
               </div>
-              <div className="brand-card p-10 bg-studio-paper">
+              <div className="brand-card p-6 md:p-10 bg-studio-paper">
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Describe your creative vision..."
-                  className="input-brief"
+                  className="input-brief text-xl md:text-2xl"
                   rows={4}
                 />
                 
@@ -684,8 +685,8 @@ function BrandBuilderApp() {
                       onClick={() => setSelectedStyle(style.id)}
                       className={`px-6 py-3 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] transition-all border flex items-center gap-2 ${
                         selectedStyle === style.id 
-                          ? 'bg-studio-ink text-white border-studio-ink shadow-lg scale-105' 
-                          : 'bg-white text-studio-ink border-studio-ink/10 hover:border-studio-ink/30'
+                          ? 'bg-white text-black border-white shadow-lg scale-105' 
+                          : 'bg-white/5 text-white/40 border-white/10 hover:border-white/30'
                       }`}
                     >
                       {style.icon}
@@ -706,8 +707,8 @@ function BrandBuilderApp() {
                       onClick={() => setActiveFilter(filter.id)}
                       className={`px-4 py-2 rounded-lg text-[9px] font-bold tracking-[0.2em] uppercase transition-all ${
                         activeFilter === filter.id 
-                          ? 'bg-studio-ink text-white' 
-                          : 'bg-studio-ink/5 text-studio-ink/40 hover:bg-studio-ink/10'
+                          ? 'bg-white text-black' 
+                          : 'bg-white/5 text-white/40 hover:bg-white/10'
                       }`}
                     >
                       {filter.label}
@@ -720,8 +721,8 @@ function BrandBuilderApp() {
                     onClick={() => setIsThinkingMode(!isThinkingMode)}
                     className={`flex items-center justify-center gap-3 px-6 py-4 rounded-full text-[10px] font-bold tracking-[0.2em] uppercase transition-all border ${
                       isThinkingMode 
-                        ? 'bg-studio-ink text-white border-studio-ink shadow-md' 
-                        : 'bg-white text-studio-ink/40 border-studio-ink/10 hover:border-studio-ink/30'
+                        ? 'bg-white text-black border-white shadow-md' 
+                        : 'bg-white/5 text-white/40 border-white/10 hover:border-white/30'
                     }`}
                   >
                     <Brain className={`w-4 h-4 ${isThinkingMode ? 'animate-pulse' : ''}`} />
@@ -776,7 +777,7 @@ function BrandBuilderApp() {
           <div className="brand-card overflow-hidden">
             <button 
               onClick={() => setIsGuidelinesOpen(!isGuidelinesOpen)}
-              className="w-full p-10 flex items-center justify-between hover:bg-studio-ink/5 transition-colors"
+              className="w-full p-10 flex items-center justify-between hover:bg-white/5 transition-colors"
             >
               <div className="flex items-center gap-4 opacity-40 uppercase tracking-[0.3em] text-[10px] font-bold">
                 <div className="w-6 h-[1px] bg-current" />
@@ -798,7 +799,7 @@ function BrandBuilderApp() {
                   exit={{ height: 0, opacity: 0 }}
                   transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
                 >
-                  <div className="px-10 pb-16 grid grid-cols-1 md:grid-cols-3 gap-16 border-t border-studio-ink/5 pt-12">
+                  <div className="px-6 md:px-10 pb-12 md:pb-16 grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-16 border-t border-white/5 pt-12">
                     {/* Colors */}
                     <div>
                       <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] mb-6 opacity-50">Color Palette</h4>
@@ -806,7 +807,7 @@ function BrandBuilderApp() {
                         {guidelines.colors.map((color, idx) => (
                           <div key={`color-input-${idx}`} className="flex flex-col gap-3">
                             <div 
-                              className="w-14 h-14 rounded-2xl border border-studio-ink/10 shadow-inner relative overflow-hidden" 
+                              className="w-14 h-14 rounded-2xl border border-white/10 shadow-inner relative overflow-hidden" 
                               style={{ backgroundColor: color }}
                             >
                               <input 
@@ -835,7 +836,7 @@ function BrandBuilderApp() {
                         value={guidelines.fonts}
                         onChange={(e) => updateGuideline('fonts', e.target.value)}
                         placeholder="e.g., Playfair Display, Inter"
-                        className="w-full bg-transparent border-b border-studio-ink/10 py-2 text-xl font-serif italic focus:outline-none focus:border-studio-ink transition-colors"
+                        className="w-full bg-transparent border-b border-white/10 py-2 text-xl font-serif italic focus:outline-none focus:border-white transition-colors"
                       />
                     </div>
 
@@ -846,7 +847,7 @@ function BrandBuilderApp() {
                         value={guidelines.tone}
                         onChange={(e) => updateGuideline('tone', e.target.value)}
                         placeholder="e.g., Sophisticated and minimalist."
-                        className="w-full bg-transparent border-b border-studio-ink/10 py-2 text-sm leading-relaxed opacity-70 focus:outline-none focus:border-studio-ink transition-colors resize-none h-24"
+                        className="w-full bg-transparent border-b border-white/10 py-2 text-sm leading-relaxed opacity-70 focus:outline-none focus:border-white transition-colors resize-none h-24"
                       />
                     </div>
                   </div>
@@ -861,14 +862,14 @@ function BrandBuilderApp() {
           <motion.div 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mb-8 p-4 bg-red-50 border border-red-100 text-red-600 rounded-xl text-sm"
+            className="mb-8 p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl text-sm"
           >
             {error}
           </motion.div>
         )}
 
         {/* Results Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-12">
           <AnimatePresence mode="popLayout">
             {isGeneratingCampaign && !results.length && (
               [1, 2, 3].map((i) => (
@@ -914,7 +915,7 @@ function BrandBuilderApp() {
                     {result.medium === 'newspaper' && (
                       <div className="absolute inset-0 pointer-events-none opacity-20 mix-blend-overlay bg-[url('https://www.transparenttextures.com/patterns/paper-fibers.png')]" />
                     )}
-                    <div className="absolute top-6 left-6 bg-white/90 backdrop-blur-md px-4 py-2 rounded-full text-[9px] font-bold uppercase tracking-[0.2em] flex items-center gap-2 shadow-sm">
+                    <div className="absolute top-6 left-6 bg-black/80 backdrop-blur-md px-4 py-2 rounded-full text-[9px] font-bold uppercase tracking-[0.2em] flex items-center gap-2 shadow-sm">
                       {result.medium === 'billboard' && <Layout className="w-3 h-3" />}
                       {result.medium === 'newspaper' && <Newspaper className="w-3 h-3" />}
                       {result.medium === 'social' && <Instagram className="w-3 h-3" />}
@@ -933,15 +934,15 @@ function BrandBuilderApp() {
                     </div>
                     
                     {result.medium === 'social' && (
-                      <div className="flex gap-6 pt-8 border-t border-studio-ink/5">
+                      <div className="flex gap-6 pt-8 border-t border-white/5">
                         <motion.div whileHover={{ scale: 1.2, y: -2 }}>
-                          <Facebook className="w-4 h-4 text-studio-ink/20 hover:text-[#1877F2] transition-colors cursor-pointer" />
+                          <Facebook className="w-4 h-4 text-white/20 hover:text-[#1877F2] transition-colors cursor-pointer" />
                         </motion.div>
                         <motion.div whileHover={{ scale: 1.2, y: -2 }}>
-                          <Twitter className="w-4 h-4 text-studio-ink/20 hover:text-[#1DA1F2] transition-colors cursor-pointer" />
+                          <Twitter className="w-4 h-4 text-white/20 hover:text-[#1DA1F2] transition-colors cursor-pointer" />
                         </motion.div>
                         <motion.div whileHover={{ scale: 1.2, y: -2 }}>
-                          <Linkedin className="w-4 h-4 text-studio-ink/20 hover:text-[#0A66C2] transition-colors cursor-pointer" />
+                          <Linkedin className="w-4 h-4 text-white/20 hover:text-[#0A66C2] transition-colors cursor-pointer" />
                         </motion.div>
                       </div>
                     )}
@@ -957,14 +958,14 @@ function BrandBuilderApp() {
           <motion.div 
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="fixed bottom-12 right-12 w-56 bg-studio-paper p-6 rounded-[2rem] shadow-2xl border border-studio-ink/10 z-40 cursor-zoom-in group"
+            className="fixed bottom-6 right-6 w-40 md:bottom-12 md:right-12 md:w-56 bg-studio-paper p-4 md:p-6 rounded-[1.5rem] md:rounded-[2rem] shadow-2xl border border-studio-ink/10 z-40 cursor-zoom-in group"
             onClick={() => referenceImage && setZoomedImage({ url: referenceImage, medium: 'social', prompt: 'Reference Shot', copy: '' })}
           >
-            <div className="text-[9px] font-bold uppercase tracking-[0.3em] mb-4 opacity-40 flex items-center justify-center gap-2">
-              <ImageIcon className="w-3 h-3" />
+            <div className="text-[8px] md:text-[9px] font-bold uppercase tracking-[0.3em] mb-3 md:mb-4 opacity-40 flex items-center justify-center gap-2">
+              <ImageIcon className="w-2.5 h-2.5 md:w-3 md:h-3" />
               Reference
             </div>
-            <div className="aspect-square rounded-2xl overflow-hidden bg-studio-bg border border-studio-ink/5 relative">
+            <div className="aspect-square rounded-xl md:rounded-2xl overflow-hidden bg-studio-bg border border-studio-ink/5 relative">
               {isGeneratingRef ? (
                 <div className="w-full h-full flex items-center justify-center">
                   <motion.div
@@ -973,7 +974,7 @@ function BrandBuilderApp() {
                     className="w-full h-full bg-studio-ink/5"
                   />
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <Loader2 className="w-6 h-6 text-studio-ink/20 animate-spin" />
+                    <Loader2 className="w-4 h-4 md:w-6 md:h-6 text-studio-ink/20 animate-spin" />
                   </div>
                 </div>
               ) : (
@@ -985,12 +986,12 @@ function BrandBuilderApp() {
                     referrerPolicy="no-referrer"
                   />
                   <div className="absolute inset-0 bg-studio-ink/0 group-hover:bg-studio-ink/10 transition-colors flex items-center justify-center">
-                    <Maximize2 className="text-white opacity-0 group-hover:opacity-100 transition-opacity w-6 h-6" />
+                    <Maximize2 className="text-white opacity-0 group-hover:opacity-100 transition-opacity w-4 h-4 md:w-6 md:h-6" />
                   </div>
                 </>
               )}
             </div>
-            <p className="text-[8px] mt-4 leading-tight opacity-40 text-center uppercase tracking-[0.2em] font-bold">
+            <p className="text-[7px] md:text-[8px] mt-3 md:mt-4 leading-tight opacity-40 text-center uppercase tracking-[0.2em] font-bold">
               {isGeneratingRef ? 'Drafting...' : 'View Reference'}
             </p>
           </motion.div>
@@ -1007,7 +1008,7 @@ function BrandBuilderApp() {
               onClick={() => setZoomedImage(null)}
             >
               <button 
-                className="absolute top-12 right-12 p-4 bg-studio-ink text-white rounded-full hover:bg-studio-accent transition-colors z-[110]"
+                className="absolute top-12 right-12 p-4 bg-studio-ink text-black rounded-full hover:bg-studio-accent transition-colors z-[110]"
                 onClick={() => setZoomedImage(null)}
               >
                 <X className="w-6 h-6" />
@@ -1070,7 +1071,7 @@ function BrandBuilderApp() {
       </main>
 
       {/* Footer Decoration */}
-      <footer className="mt-48 py-20 border-t border-studio-ink/5 px-12 text-center">
+      <footer className="mt-48 py-20 border-t border-white/5 px-12 text-center">
         <div className="max-w-xs mx-auto mb-8 opacity-10">
           <Sparkles className="w-8 h-8 mx-auto" />
         </div>
@@ -1078,6 +1079,7 @@ function BrandBuilderApp() {
           Creative Intelligence &bull; Brand Studio 2026
         </p>
       </footer>
+      </div>
     </div>
   );
 }
