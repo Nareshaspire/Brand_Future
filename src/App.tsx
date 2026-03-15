@@ -44,7 +44,8 @@ import {
   orderBy, 
   onSnapshot,
   User,
-  doc
+  doc,
+  deleteDoc
 } from './firebase';
 
 // Initialize Gemini
@@ -154,6 +155,8 @@ function BrandBuilderApp() {
   const [isThinkingMode, setIsThinkingMode] = useState(false);
   const [history, setHistory] = useState<CampaignRecord[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [campaignToDelete, setCampaignToDelete] = useState<CampaignRecord | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Auth Listener
   useEffect(() => {
@@ -240,6 +243,19 @@ function BrandBuilderApp() {
     setReferenceImage(campaign.referenceImage);
     setResults(campaign.results);
     setShowHistory(false);
+  };
+
+  const deleteCampaign = async (campaignId: string) => {
+    setIsDeleting(true);
+    try {
+      await deleteDoc(doc(db, 'campaigns', campaignId));
+      setCampaignToDelete(null);
+    } catch (err) {
+      console.error("Delete Campaign Error:", err);
+      setError("Failed to delete campaign.");
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const styles: { id: VisualStyle; label: string; icon: React.ReactNode }[] = [
@@ -442,9 +458,10 @@ function BrandBuilderApp() {
           userId: user.uid
         });
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setError("Failed to generate campaign. Please try again.");
+      const errorMessage = err?.message || "Failed to generate campaign. Please try again.";
+      setError(errorMessage);
     } finally {
       setIsGeneratingCampaign(false);
     }
@@ -564,9 +581,19 @@ function BrandBuilderApp() {
                       {history.map((record) => (
                         <div 
                           key={record.id}
+                          className="group bg-[#F5F5F0]/50 rounded-3xl p-6 border border-[#1A1A1A]/5 hover:bg-white hover:shadow-xl transition-all cursor-pointer relative"
                           onClick={() => loadCampaign(record)}
-                          className="group bg-[#F5F5F0]/50 rounded-3xl p-6 border border-[#1A1A1A]/5 hover:bg-white hover:shadow-xl transition-all cursor-pointer"
                         >
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setCampaignToDelete(record);
+                            }}
+                            className="absolute top-4 right-4 p-2 bg-white/80 backdrop-blur-sm text-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50 z-10"
+                            title="Delete Campaign"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                           <div className="aspect-video rounded-2xl overflow-hidden mb-4 bg-white">
                             <img src={record.referenceImage} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Ref" />
                           </div>
@@ -583,6 +610,50 @@ function BrandBuilderApp() {
                       ))}
                     </div>
                   )}
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Delete Confirmation Modal */}
+        <AnimatePresence>
+          {campaignToDelete && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm"
+              onClick={() => setCampaignToDelete(null)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="bg-white p-8 rounded-[2.5rem] shadow-2xl max-w-sm w-full text-center"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Trash2 className="w-8 h-8" />
+                </div>
+                <h3 className="text-xl font-light mb-2">Delete Campaign?</h3>
+                <p className="text-sm opacity-50 mb-8 leading-relaxed">
+                  This action cannot be undone. This will permanently delete the campaign from your history.
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setCampaignToDelete(null)}
+                    className="flex-1 px-6 py-3 rounded-full border border-[#1A1A1A]/10 text-xs font-bold uppercase tracking-widest hover:bg-[#F5F5F0] transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => deleteCampaign(campaignToDelete.id)}
+                    disabled={isDeleting}
+                    className="flex-1 px-6 py-3 rounded-full bg-red-500 text-white text-xs font-bold uppercase tracking-widest hover:bg-red-600 transition-colors disabled:opacity-50"
+                  >
+                    {isDeleting ? 'Deleting...' : 'Delete'}
+                  </button>
                 </div>
               </motion.div>
             </motion.div>
@@ -861,9 +932,30 @@ function BrandBuilderApp() {
                     
                     {result.medium === 'social' && (
                       <div className="flex gap-4 pt-6 border-t border-[#1A1A1A]/5">
-                        <Facebook className="w-4 h-4 text-[#1A1A1A]/20" />
-                        <Twitter className="w-4 h-4 text-[#1A1A1A]/20" />
-                        <Linkedin className="w-4 h-4 text-[#1A1A1A]/20" />
+                        <motion.div
+                          initial={{ scale: 0, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.1 }}
+                          whileHover={{ scale: 1.2 }}
+                        >
+                          <Facebook className="w-4 h-4 text-[#1A1A1A]/20 hover:text-[#1877F2] transition-colors cursor-pointer" />
+                        </motion.div>
+                        <motion.div
+                          initial={{ scale: 0, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.2 }}
+                          whileHover={{ scale: 1.2 }}
+                        >
+                          <Twitter className="w-4 h-4 text-[#1A1A1A]/20 hover:text-[#1DA1F2] transition-colors cursor-pointer" />
+                        </motion.div>
+                        <motion.div
+                          initial={{ scale: 0, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.3 }}
+                          whileHover={{ scale: 1.2 }}
+                        >
+                          <Linkedin className="w-4 h-4 text-[#1A1A1A]/20 hover:text-[#0A66C2] transition-colors cursor-pointer" />
+                        </motion.div>
                       </div>
                     )}
                   </div>
